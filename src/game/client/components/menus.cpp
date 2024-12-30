@@ -623,8 +623,6 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 
-		bool GotNewsOrUpdate = false;
-
 #if defined(CONF_AUTOUPDATE)
 		int State = Updater()->GetCurrentState();
 		bool NeedUpdate = str_comp(Client()->LatestVersion(), "0");
@@ -634,20 +632,12 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		}
 #endif
 
-		GotNewsOrUpdate |= (bool)g_Config.m_UiUnreadNews;
-
 		ColorRGBA HomeButtonColorAlert(0, 1, 0, 0.25f);
 		ColorRGBA HomeButtonColorAlertHover(0, 1, 0, 0.5f);
 		ColorRGBA *pHomeButtonColor = nullptr;
 		ColorRGBA *pHomeButtonColorHover = nullptr;
 
 		const char *pHomeScreenButtonLabel = FONT_ICON_HOUSE;
-		if(GotNewsOrUpdate)
-		{
-			pHomeScreenButtonLabel = FONT_ICON_NEWSPAPER;
-			pHomeButtonColor = &HomeButtonColorAlert;
-			pHomeButtonColorHover = &HomeButtonColorAlertHover;
-		}
 
 		static CButtonContainer s_StartButton;
 		if(DoButton_MenuTab(&s_StartButton, pHomeScreenButtonLabel, false, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_HOME], pHomeButtonColor, pHomeButtonColor, pHomeButtonColorHover, 10.0f))
@@ -849,34 +839,6 @@ void CMenus::FinishLoading()
 
 void CMenus::RenderNews(CUIRect MainView)
 {
-	GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_NEWS);
-
-	g_Config.m_UiUnreadNews = false;
-
-	MainView.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
-
-	MainView.HSplitTop(10.0f, nullptr, &MainView);
-	MainView.VSplitLeft(15.0f, nullptr, &MainView);
-
-	CUIRect Label;
-
-	const char *pStr = Client()->News();
-	char aLine[256];
-	while((pStr = str_next_token(pStr, "\n", aLine, sizeof(aLine))))
-	{
-		const int Len = str_length(aLine);
-		if(Len > 0 && aLine[0] == '|' && aLine[Len - 1] == '|')
-		{
-			MainView.HSplitTop(30.0f, &Label, &MainView);
-			aLine[Len - 1] = '\0';
-			Ui()->DoLabel(&Label, aLine + 1, 20.0f, TEXTALIGN_ML);
-		}
-		else
-		{
-			MainView.HSplitTop(20.0f, &Label, &MainView);
-			Ui()->DoLabel(&Label, aLine, 15.f, TEXTALIGN_ML);
-		}
-	}
 }
 
 void CMenus::OnInit()

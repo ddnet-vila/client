@@ -3,6 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_SCOREBOARD_H
 #define GAME_CLIENT_COMPONENTS_SCOREBOARD_H
 
+#include <engine/shared/protocol.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
 

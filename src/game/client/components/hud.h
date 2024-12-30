@@ -159,6 +159,13 @@ private:
 	int m_PracticeModeOffset;
 	int m_Team0ModeOffset;
 	int m_LockModeOffset;
+
+	// vila
+	void RenderDefaultScoreHud();
+	void RenderTeamScoreHud();
+	void RenderTeamStatsHud(int Team);
+	void RenderStatBars();
+	STextContainerIndex m_StatBarTextContainerIndex;
 };
 
 #endif

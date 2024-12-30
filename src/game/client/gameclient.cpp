@@ -2051,6 +2051,17 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 
+	// sort player infos by game team (and name between)
+	Index = 0;
+	for(int Team = TEAM_RED; Team <= TEAM_BLUE; ++Team)
+	{
+		for(int i = 0; i < MAX_CLIENTS && Index < MAX_CLIENTS; ++i)
+		{
+			if(m_Snap.m_apInfoByName[i] && m_Snap.m_apInfoByName[i]->m_Team == Team)
+				m_Snap.m_apInfoByTeamName[Index++] = m_Snap.m_apInfoByName[i];
+		}
+	}
+
 	CTuningParams StandardTuning;
 	if(ServerInfo.m_aGameType[0] != '0')
 	{
