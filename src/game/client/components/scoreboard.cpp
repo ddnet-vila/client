@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "scoreboard.h"
+#include "base/math.h"
 
 #include <engine/demo.h>
 #include <engine/graphics.h>
@@ -266,7 +267,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		TeeSizeMod = 1.0f;
 		Spacing = 16.0f;
 		RoundRadius = 10.0f;
-		FontSize = 24.0f;
+		FontSize = 20.0f;
 	}
 	else if(NumPlayers <= 12)
 	{
@@ -274,7 +275,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		TeeSizeMod = 0.9f;
 		Spacing = 5.0f;
 		RoundRadius = 10.0f;
-		FontSize = 24.0f;
+		FontSize = 20.0f;
 	}
 	else if(NumPlayers <= 16)
 	{
@@ -282,7 +283,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		TeeSizeMod = 0.8f;
 		Spacing = 0.0f;
 		RoundRadius = 5.0f;
-		FontSize = 24.0f;
+		FontSize = 20.0f;
 	}
 	else if(NumPlayers <= 24)
 	{
@@ -290,7 +291,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		TeeSizeMod = 0.6f;
 		Spacing = 0.0f;
 		RoundRadius = 5.0f;
-		FontSize = 20.0f;
+		FontSize = 16.0f;
 	}
 	else if(NumPlayers <= 32)
 	{
@@ -298,7 +299,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		TeeSizeMod = 0.4f;
 		Spacing = 0.0f;
 		RoundRadius = 5.0f;
-		FontSize = 16.0f;
+		FontSize = 12.0f;
 	}
 	else if(LowScoreboardWidth)
 	{
@@ -306,7 +307,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		TeeSizeMod = 0.25f;
 		Spacing = 0.0f;
 		RoundRadius = 2.0f;
-		FontSize = 14.0f;
+		FontSize = 12.0f;
 	}
 	else
 	{
@@ -317,31 +318,56 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		FontSize = 10.0f;
 	}
 
-	const float ScoreOffset = Scoreboard.x + 40.0f;
-	const float ScoreLength = TextRender()->TextWidth(FontSize, TimeScore ? "00:00:00" : "99999");
-	const float TeeOffset = ScoreOffset + ScoreLength + 20.0f;
-	const float TeeLength = 60.0f * TeeSizeMod;
-	const float NameOffset = TeeOffset + TeeLength;
-	const float NameLength = (LowScoreboardWidth ? 180.0f : 300.0f) - TeeLength;
-	const float CountryLength = (LineHeight - Spacing - TeeSizeMod * 5.0f) * 2.0f;
+	const float Height = 400.0f * 3.0f;
+	const float Width = Height * Graphics()->ScreenAspect();
+
+	const float XScale = Graphics()->ScreenWidth() / Width;
+	const float YScale = Graphics()->ScreenHeight() / Height;
+
+	const float Margin = 4.0f;
+
+	const float PingOffset = Scoreboard.x + 4 * Margin;
 	const float PingLength = 55.0f;
-	const float PingOffset = Scoreboard.x + Scoreboard.w - PingLength - 20.0f;
-	const float CountryOffset = PingOffset - CountryLength;
-	const float ClanOffset = NameOffset + NameLength + 5.0f;
-	const float ClanLength = CountryOffset - ClanOffset - 5.0f;
+	const float CountryOffset = PingOffset + PingLength + 2 * Margin;
+	const float CountryLength = (LineHeight - Spacing - TeeSizeMod * 10.0f) * 2.0f;
+	const float ClanOffset = CountryOffset + CountryLength + 2 * Margin;
+	const float ClanLength = 160.0f;
+	const float NameOffset = ClanOffset + ClanLength;
+	const float NameLength = (LowScoreboardWidth ? 180.0f : 240.0f);
+	const float KillsOffset = NameOffset + NameLength + Margin;
+	const float KillsLength = 40.0f;
+	const float SuicidesOffset = KillsOffset + KillsLength + Margin;
+	const float SuicidesLength = 40.0f;
+	const float DeathsOffset = SuicidesOffset + SuicidesLength + Margin;
+	const float DeathsLength = 40.0f;
+	const float ScoreLength = TextRender()->TextWidth(FontSize, TimeScore ? "00:00:00" : "99999");
+	const float ScoreOffset = Scoreboard.x + Scoreboard.w - ScoreLength - 4 * Margin;
 
 	// render headlines
 	const float HeadlineFontsize = 22.0f;
 	CUIRect Headline;
 	Scoreboard.HSplitTop(HeadlineFontsize * 2.0f, &Headline, &Scoreboard);
 	const float HeadlineY = Headline.y + Headline.h / 2.0f - HeadlineFontsize / 2.0f;
-	const char *pScore = TimeScore ? Localize("Time") : Localize("Score");
-	TextRender()->Text(ScoreOffset + ScoreLength - TextRender()->TextWidth(HeadlineFontsize, pScore), HeadlineY, HeadlineFontsize, pScore);
 	TextRender()->Text(NameOffset, HeadlineY, HeadlineFontsize, Localize("Name"));
 	const char *pClanLabel = Localize("Clan");
-	TextRender()->Text(ClanOffset + (ClanLength - TextRender()->TextWidth(HeadlineFontsize, pClanLabel)) / 2.0f, HeadlineY, HeadlineFontsize, pClanLabel);
+	TextRender()->Text(ClanOffset, HeadlineY, HeadlineFontsize, pClanLabel);
 	const char *pPingLabel = Localize("Ping");
 	TextRender()->Text(PingOffset + PingLength - TextRender()->TextWidth(HeadlineFontsize, pPingLabel), HeadlineY, HeadlineFontsize, pPingLabel);
+
+	if(!TimeScore)
+	{
+		const char *pKillsLabel = Localize("K");
+		TextRender()->Text(KillsOffset + KillsLength - TextRender()->TextWidth(HeadlineFontsize, pKillsLabel), HeadlineY, HeadlineFontsize, pKillsLabel);
+		const char *pSuicidesLabel = Localize("S");
+		TextRender()->Text(SuicidesOffset + SuicidesLength - TextRender()->TextWidth(HeadlineFontsize, pKillsLabel), HeadlineY, HeadlineFontsize, pSuicidesLabel);
+		const char *pDeathsLabel = Localize("D");
+		TextRender()->Text(DeathsOffset + DeathsLength - TextRender()->TextWidth(HeadlineFontsize, pDeathsLabel), HeadlineY, HeadlineFontsize, pDeathsLabel);
+	}
+	else
+	{
+		const char *pScore = Localize("Time");
+		TextRender()->Text(ScoreOffset + ScoreLength - TextRender()->TextWidth(HeadlineFontsize, pScore), HeadlineY, HeadlineFontsize, pScore);
+	}
 
 	// render player entries
 	int CountRendered = 0;
@@ -454,40 +480,13 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 				(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == SPEC_FREEVIEW && pInfo->m_Local) ||
 				(GameClient()->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientId == GameClient()->m_Snap.m_SpecInfo.m_SpectatorId))
 			{
-				Row.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), IGraphics::CORNER_ALL, RoundRadius);
+				Row.Draw4(ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), IGraphics::CORNER_NONE, RoundRadius);
 			}
+			else 
+			{
+				Row.Draw4(ColorRGBA(0.3f, 0.3f, 0.3f, 0.0f), ColorRGBA(0.3f, 0.3f, 0.3f, 0.3f), ColorRGBA(0.3f, 0.3f, 0.3f, 0.0f), ColorRGBA(0.3f, 0.3f, 0.3f, 0.3f), IGraphics::CORNER_NONE, RoundRadius);
 
-			// score
-			if(Race7)
-			{
-				if(pInfo->m_Score == -1)
-				{
-					aBuf[0] = '\0';
-				}
-				else
-				{
-					// 0.7 uses milliseconds and ddnets str_time wants centiseconds
-					// 0.7 servers can also send the amount of precision the client should use
-					// we ignore that and always show 3 digit precision
-					str_time((int64_t)absolute(pInfo->m_Score / 10), TIME_MINS_CENTISECS, aBuf, sizeof(aBuf));
-				}
 			}
-			else if(TimeScore)
-			{
-				if(pInfo->m_Score == -9999)
-				{
-					aBuf[0] = '\0';
-				}
-				else
-				{
-					str_time((int64_t)absolute(pInfo->m_Score) * 100, TIME_HOURS, aBuf, sizeof(aBuf));
-				}
-			}
-			else
-			{
-				str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -999, 99999));
-			}
-			TextRender()->Text(ScoreOffset + ScoreLength - TextRender()->TextWidth(FontSize, aBuf), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aBuf);
 
 			// CTF flag
 			if(pGameInfoObj && (pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS) &&
@@ -497,37 +496,34 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 				Graphics()->TextureSet(pGameDataObj->m_FlagCarrierBlue == pInfo->m_ClientId ? GameClient()->m_GameSkin.m_SpriteFlagBlue : GameClient()->m_GameSkin.m_SpriteFlagRed);
 				Graphics()->QuadsBegin();
 				Graphics()->QuadsSetSubset(1.0f, 0.0f, 0.0f, 1.0f);
-				IGraphics::CQuadItem QuadItem(TeeOffset, Row.y - 5.0f - Spacing / 2.0f, Row.h / 2.0f, Row.h);
+				IGraphics::CQuadItem QuadItem(NameOffset - 16.0f, Row.y - 5.0f - Spacing / 2.0f, Row.h / 2.0f, Row.h);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
 			}
 
 			const CGameClient::CClientData &ClientData = GameClient()->m_aClients[pInfo->m_ClientId];
 
-			// skin
-			if(RenderDead)
+			// country flag
 			{
-				Graphics()->BlendNormal();
-				Graphics()->TextureSet(m_DeadTeeTexture);
-				Graphics()->QuadsBegin();
-				if(m_pClient->IsTeamPlay())
+				int Code = ClientData.m_Country;
+
+				const auto *pFlag = GameClient()->m_CountryFlags.GetByCountryCode(Code);
+
+				if(pFlag->m_Texture.IsValid())
 				{
-					Graphics()->SetColor(m_pClient->m_Skins7.GetTeamColor(true, 0, m_pClient->m_aClients[pInfo->m_ClientId].m_Team, protocol7::SKINPART_BODY));
+					// Graphics()->ClipEnable((int)(Row.x * Graphics()->ScreenWidth()), (int)(Row.y * Graphics()->ScreenHeight()),
+					//	(int)(Row.w * Graphics()->ScreenWidth()), (int)(Row.h * Graphics()->ScreenHeight()));
+					Graphics()->ClipEnable((int)(Row.x * XScale), (int)(Row.y * YScale), (int)(Row.w * XScale), (int)(Row.h * YScale));
+					Graphics()->BlendNormal();
+					Graphics()->TextureSet(pFlag->m_Texture);
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pi / 6);
+					Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f));
+					IGraphics::CQuadItem QuadItem(Row.x - Row.h * 2.0f, Row.y - Row.h * 1.5f, 2 * 3 * Row.h, 3 * Row.h);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+					Graphics()->QuadsEnd();
+					Graphics()->ClipDisable();
 				}
-				CTeeRenderInfo TeeInfo = m_pClient->m_aClients[pInfo->m_ClientId].m_RenderInfo;
-				TeeInfo.m_Size *= TeeSizeMod;
-				IGraphics::CQuadItem QuadItem(TeeOffset, Row.y, TeeInfo.m_Size, TeeInfo.m_Size);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-				Graphics()->QuadsEnd();
-			}
-			else
-			{
-				CTeeRenderInfo TeeInfo = ClientData.m_RenderInfo;
-				TeeInfo.m_Size *= TeeSizeMod;
-				vec2 OffsetToMid;
-				CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &TeeInfo, OffsetToMid);
-				const vec2 TeeRenderPos = vec2(TeeOffset + TeeLength / 2, Row.y + Row.h / 2.0f + OffsetToMid.y);
-				RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
 			}
 
 			// name
@@ -566,27 +562,72 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 					TextRender()->TextColor(TextColor);
 				}
 				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, ClanOffset + (ClanLength - minimum(TextRender()->TextWidth(FontSize, ClientData.m_aClan), ClanLength)) / 2.0f, Row.y + (Row.h - FontSize) / 2.0f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END);
+				TextRender()->SetCursor(&Cursor, ClanOffset, Row.y + (Row.h - FontSize) / 2.0f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END);
 				Cursor.m_LineWidth = ClanLength;
 				TextRender()->TextEx(&Cursor, ClientData.m_aClan);
 			}
 
-			// country flag
-			GameClient()->m_CountryFlags.Render(ClientData.m_Country, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f),
-				CountryOffset, Row.y + (Spacing + TeeSizeMod * 5.0f) / 2.0f, CountryLength, Row.h - Spacing - TeeSizeMod * 5.0f);
-
 			// ping
-			if(g_Config.m_ClEnablePingColor)
 			{
-				TextRender()->TextColor(color_cast<ColorRGBA>(ColorHSLA((300.0f - clamp(pInfo->m_Latency, 0, 300)) / 1000.0f, 1.0f, 0.5f)));
+				if(g_Config.m_ClEnablePingColor)
+				{
+					TextRender()->TextColor(color_cast<ColorRGBA>(ColorHSLA((300.0f - clamp(pInfo->m_Latency, 0, 300)) / 1000.0f, 1.0f, 0.5f)));
+				}
+				else
+				{
+					TextRender()->TextColor(TextRender()->DefaultTextColor());
+				}
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Latency, 0, 999));
+				TextRender()->Text(PingOffset, Row.y + (Row.h - FontSize) / 2.0f, FontSize, aBuf);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+			}
+
+			// stats
+			if(!TimeScore)
+			{
+				str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_aStats[pInfo->m_ClientId].m_Frags);
+				TextRender()->Text(KillsOffset + KillsLength - TextRender()->TextWidth(FontSize, aBuf), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aBuf);
+
+				str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_aStats[pInfo->m_ClientId].m_Suicides);
+				TextRender()->Text(SuicidesOffset + SuicidesLength - TextRender()->TextWidth(FontSize, aBuf), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aBuf);
+
+				str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_aStats[pInfo->m_ClientId].m_Deaths);
+				TextRender()->Text(DeathsOffset + DeathsLength - TextRender()->TextWidth(FontSize, aBuf), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aBuf);
 			}
 			else
 			{
-				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				// score
+				if(Race7)
+				{
+					if(pInfo->m_Score == -1)
+					{
+						aBuf[0] = '\0';
+					}
+					else
+					{
+						// 0.7 uses milliseconds and ddnets str_time wants centiseconds
+						// 0.7 servers can also send the amount of precision the client should use
+						// we ignore that and always show 3 digit precision
+						str_time((int64_t)absolute(pInfo->m_Score / 10), TIME_MINS_CENTISECS, aBuf, sizeof(aBuf));
+					}
+				}
+				else if(TimeScore)
+				{
+					if(pInfo->m_Score == -9999)
+					{
+						aBuf[0] = '\0';
+					}
+					else
+					{
+						str_time((int64_t)absolute(pInfo->m_Score) * 100, TIME_HOURS, aBuf, sizeof(aBuf));
+					}
+				}
+				else
+				{
+					str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -999, 99999));
+				}
+				TextRender()->Text(ScoreOffset + ScoreLength - TextRender()->TextWidth(FontSize, aBuf), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aBuf);
 			}
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Latency, 0, 999));
-			TextRender()->Text(PingOffset + PingLength - TextRender()->TextWidth(FontSize, aBuf), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aBuf);
-			TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 			if(CountRendered == CountEnd)
 				break;
