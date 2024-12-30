@@ -28,6 +28,8 @@ public:
 	void Render(const CCountryFlag *pFlag, ColorRGBA Color, float x, float y, float w, float h);
 	void Render(int CountryCode, ColorRGBA Color, float x, float y, float w, float h);
 
+	int QuadContainerIndex() const { return m_FlagsQuadContainerIndex; }
+
 private:
 	enum
 	{

@@ -24,6 +24,11 @@
 #include "hud.h"
 #include "voting.h"
 
+const float s_DefaultHudBoxHeight = 16.0f;
+const float s_DefaultFontSize = 10.0f;
+
+const ColorRGBA s_TeamColor[2] = {{0.975f, 0.17f, 0.17f, 0.3f}, {0.17f, 0.46f, 0.975f, 0.3f}};
+
 CHud::CHud()
 {
 	// won't work if zero
@@ -103,7 +108,9 @@ void CHud::OnInit()
 	}
 
 	// the flags
-	m_FlagOffset = RenderTools()->QuadContainerAddSprite(m_HudQuadContainerIndex, 0.f, 0.f, 8.f, 16.f);
+	int FlagHeight = s_DefaultHudBoxHeight - 2;
+	int FlagWidth = FlagHeight / 2;
+	m_FlagOffset = RenderTools()->QuadContainerAddSprite(m_HudQuadContainerIndex, 0.f, 0.f, FlagWidth, FlagHeight);
 
 	PreparePlayerStateQuads();
 
@@ -134,20 +141,23 @@ void CHud::RenderGameTimer()
 			Time = (Client()->GameTick(g_Config.m_ClDummy) - m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / Client()->GameTickSpeed();
 
 		str_time((int64_t)Time * 100, TIME_DAYS, aBuf, sizeof(aBuf));
-		float FontSize = 10.0f;
+		float FontSize = s_DefaultFontSize;
 		static float s_TextWidthM = TextRender()->TextWidth(FontSize, "00:00", -1, -1.0f);
 		static float s_TextWidthH = TextRender()->TextWidth(FontSize, "00:00:00", -1, -1.0f);
 		static float s_TextWidth0D = TextRender()->TextWidth(FontSize, "0d 00:00:00", -1, -1.0f);
 		static float s_TextWidth00D = TextRender()->TextWidth(FontSize, "00d 00:00:00", -1, -1.0f);
 		static float s_TextWidth000D = TextRender()->TextWidth(FontSize, "000d 00:00:00", -1, -1.0f);
-		float w = Time >= 3600 * 24 * 100 ? s_TextWidth000D : Time >= 3600 * 24 * 10 ? s_TextWidth00D : Time >= 3600 * 24 ? s_TextWidth0D : Time >= 3600 ? s_TextWidthH : s_TextWidthM;
+		float w = Time >= 3600 * 24 * 100 ? s_TextWidth000D : Time >= 3600 * 24 * 10 ? s_TextWidth00D :
+							      Time >= 3600 * 24              ? s_TextWidth0D :
+							      Time >= 3600                   ? s_TextWidthH :
+											       s_TextWidthM;
 		// last 60 sec red, last 10 sec blink
 		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit && Time <= 60 && (m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer <= 0))
 		{
 			float Alpha = Time <= 10 && (2 * time() / time_freq()) % 2 ? 0.5f : 1.0f;
 			TextRender()->TextColor(1.0f, 0.25f, 0.25f, Alpha);
 		}
-		TextRender()->Text(Half - w / 2, 2, FontSize, aBuf, -1.0f);
+		TextRender()->Text(Half - w / 2, m_Height - FontSize - (s_DefaultHudBoxHeight - FontSize) / 2, FontSize, aBuf, -1.0f);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }
@@ -160,7 +170,7 @@ void CHud::RenderPauseNotification()
 		const char *pText = Localize("Game paused");
 		float FontSize = 20.0f;
 		float w = TextRender()->TextWidth(FontSize, pText, -1, -1.0f);
-		TextRender()->Text(150.0f * Graphics()->ScreenAspect() + -w / 2.0f, 50.0f, FontSize, pText, -1.0f);
+		TextRender()->Text(150.0f * Graphics()->ScreenAspect() + -w / 2.0f, m_Height / 2 - FontSize / 2, FontSize, pText, -1.0f);
 	}
 }
 
@@ -172,7 +182,7 @@ void CHud::RenderSuddenDeath()
 		const char *pText = Localize("Sudden Death");
 		float FontSize = 12.0f;
 		float w = TextRender()->TextWidth(FontSize, pText, -1, -1.0f);
-		TextRender()->Text(Half - w / 2, 2, FontSize, pText, -1.0f);
+		TextRender()->Text(Half - w / 2, m_Height - FontSize - 2, FontSize, pText, -1.0f);
 	}
 }
 
@@ -181,312 +191,19 @@ void CHud::RenderScoreHud()
 	// render small score hud
 	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER))
 	{
-		float StartY = 229.0f; // the height of this display is 56, so EndY is 285
+		if(m_pClient->m_GameInfo.m_TimeScore || (Client()->IsSixup() && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE))
+			return;
 
-		const float ScoreSingleBoxHeight = 18.0f;
-
-		bool ForceScoreInfoInit = !m_aScoreInfo[0].m_Initialized || !m_aScoreInfo[1].m_Initialized;
+		int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
 		m_aScoreInfo[0].m_Initialized = m_aScoreInfo[1].m_Initialized = true;
 
 		if(m_pClient->IsTeamPlay() && m_pClient->m_Snap.m_pGameDataObj)
 		{
-			char aScoreTeam[2][16];
-			str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam[TEAM_RED]), "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed);
-			str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam[TEAM_BLUE]), "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue);
-
-			bool aRecreateTeamScore[2] = {str_comp(aScoreTeam[0], m_aScoreInfo[0].m_aScoreText) != 0, str_comp(aScoreTeam[1], m_aScoreInfo[1].m_aScoreText) != 0};
-
-			const int aFlagCarrier[2] = {
-				m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierRed,
-				m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue};
-
-			bool RecreateRect = ForceScoreInfoInit;
-			for(int t = 0; t < 2; t++)
-			{
-				if(aRecreateTeamScore[t])
-				{
-					m_aScoreInfo[t].m_ScoreTextWidth = TextRender()->TextWidth(14.0f, aScoreTeam[t == 0 ? TEAM_RED : TEAM_BLUE], -1, -1.0f);
-					str_copy(m_aScoreInfo[t].m_aScoreText, aScoreTeam[t == 0 ? TEAM_RED : TEAM_BLUE]);
-					RecreateRect = true;
-				}
-			}
-
-			static float s_TextWidth100 = TextRender()->TextWidth(14.0f, "100", -1, -1.0f);
-			float ScoreWidthMax = maximum(maximum(m_aScoreInfo[0].m_ScoreTextWidth, m_aScoreInfo[1].m_ScoreTextWidth), s_TextWidth100);
-			float Split = 3.0f;
-			float ImageSize = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS) ? 16.0f : Split;
-			for(int t = 0; t < 2; t++)
-			{
-				// draw box
-				if(RecreateRect)
-				{
-					Graphics()->DeleteQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex);
-
-					if(t == 0)
-						Graphics()->SetColor(0.975f, 0.17f, 0.17f, 0.3f);
-					else
-						Graphics()->SetColor(0.17f, 0.46f, 0.975f, 0.3f);
-					m_aScoreInfo[t].m_RoundRectQuadContainerIndex = Graphics()->CreateRectQuadContainer(m_Width - ScoreWidthMax - ImageSize - 2 * Split, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split, ScoreSingleBoxHeight, 5.0f, IGraphics::CORNER_L);
-				}
-				Graphics()->TextureClear();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-				if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
-					Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
-
-				// draw score
-				if(aRecreateTeamScore[t])
-				{
-					CTextCursor Cursor;
-					TextRender()->SetCursor(&Cursor, m_Width - ScoreWidthMax + (ScoreWidthMax - m_aScoreInfo[t].m_ScoreTextWidth) / 2 - Split, StartY + t * 20 + (18.f - 14.f) / 2.f, 14.0f, TEXTFLAG_RENDER);
-					Cursor.m_LineWidth = -1;
-					TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_TextScoreContainerIndex, &Cursor, aScoreTeam[t]);
-				}
-				if(m_aScoreInfo[t].m_TextScoreContainerIndex.Valid())
-				{
-					ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
-					ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
-					TextRender()->RenderTextContainer(m_aScoreInfo[t].m_TextScoreContainerIndex, TColor, TOutlineColor);
-				}
-
-				if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS)
-				{
-					int BlinkTimer = (m_pClient->m_aFlagDropTick[t] != 0 &&
-								 (Client()->GameTick(g_Config.m_ClDummy) - m_pClient->m_aFlagDropTick[t]) / Client()->GameTickSpeed() >= 25) ?
-								 10 :
-								 20;
-					if(aFlagCarrier[t] == FLAG_ATSTAND || (aFlagCarrier[t] == FLAG_TAKEN && ((Client()->GameTick(g_Config.m_ClDummy) / BlinkTimer) & 1)))
-					{
-						// draw flag
-						Graphics()->TextureSet(t == 0 ? m_pClient->m_GameSkin.m_SpriteFlagRed : m_pClient->m_GameSkin.m_SpriteFlagBlue);
-						Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
-						Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_FlagOffset, m_Width - ScoreWidthMax - ImageSize, StartY + 1.0f + t * 20);
-					}
-					else if(aFlagCarrier[t] >= 0)
-					{
-						// draw name of the flag holder
-						int Id = aFlagCarrier[t] % MAX_CLIENTS;
-						const char *pName = m_pClient->m_aClients[Id].m_aName;
-						if(str_comp(pName, m_aScoreInfo[t].m_aPlayerNameText) != 0 || RecreateRect)
-						{
-							str_copy(m_aScoreInfo[t].m_aPlayerNameText, pName);
-
-							float w = TextRender()->TextWidth(8.0f, pName, -1, -1.0f);
-
-							CTextCursor Cursor;
-							TextRender()->SetCursor(&Cursor, minimum(m_Width - w - 1.0f, m_Width - ScoreWidthMax - ImageSize - 2 * Split), StartY + (t + 1) * 20.0f - 2.0f, 8.0f, TEXTFLAG_RENDER);
-							Cursor.m_LineWidth = -1;
-							TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, &Cursor, pName);
-						}
-
-						if(m_aScoreInfo[t].m_OptionalNameTextContainerIndex.Valid())
-						{
-							ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
-							ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
-							TextRender()->RenderTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, TColor, TOutlineColor);
-						}
-
-						// draw tee of the flag holder
-						CTeeRenderInfo TeeInfo = m_pClient->m_aClients[Id].m_RenderInfo;
-						TeeInfo.m_Size = ScoreSingleBoxHeight;
-
-						const CAnimState *pIdleState = CAnimState::GetIdle();
-						vec2 OffsetToMid;
-						CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
-						vec2 TeeRenderPos(m_Width - ScoreWidthMax - TeeInfo.m_Size / 2 - Split, StartY + (t * 20) + ScoreSingleBoxHeight / 2.0f + OffsetToMid.y);
-
-						RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
-					}
-				}
-				StartY += 8.0f;
-			}
+			RenderTeamScoreHud();
 		}
 		else
 		{
-			int Local = -1;
-			int aPos[2] = {1, 2};
-			const CNetObj_PlayerInfo *apPlayerInfo[2] = {nullptr, nullptr};
-			int i = 0;
-			for(int t = 0; t < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_apInfoByScore[i]; ++i)
-			{
-				if(m_pClient->m_Snap.m_apInfoByScore[i]->m_Team != TEAM_SPECTATORS)
-				{
-					apPlayerInfo[t] = m_pClient->m_Snap.m_apInfoByScore[i];
-					if(apPlayerInfo[t]->m_ClientId == m_pClient->m_Snap.m_LocalClientId)
-						Local = t;
-					++t;
-				}
-			}
-			// search local player info if not a spectator, nor within top2 scores
-			if(Local == -1 && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
-			{
-				for(; i < MAX_CLIENTS && m_pClient->m_Snap.m_apInfoByScore[i]; ++i)
-				{
-					if(m_pClient->m_Snap.m_apInfoByScore[i]->m_Team != TEAM_SPECTATORS)
-						++aPos[1];
-					if(m_pClient->m_Snap.m_apInfoByScore[i]->m_ClientId == m_pClient->m_Snap.m_LocalClientId)
-					{
-						apPlayerInfo[1] = m_pClient->m_Snap.m_apInfoByScore[i];
-						Local = 1;
-						break;
-					}
-				}
-			}
-			char aScore[2][16];
-			for(int t = 0; t < 2; ++t)
-			{
-				if(apPlayerInfo[t])
-				{
-					if(Client()->IsSixup() && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE)
-						str_time((int64_t)absolute(apPlayerInfo[t]->m_Score) / 10, TIME_MINS_CENTISECS, aScore[t], sizeof(aScore[t]));
-					else if(m_pClient->m_GameInfo.m_TimeScore)
-					{
-						if(apPlayerInfo[t]->m_Score != -9999)
-							str_time((int64_t)absolute(apPlayerInfo[t]->m_Score) * 100, TIME_HOURS, aScore[t], sizeof(aScore[t]));
-						else
-							aScore[t][0] = 0;
-					}
-					else
-						str_format(aScore[t], sizeof(aScore[t]), "%d", apPlayerInfo[t]->m_Score);
-				}
-				else
-					aScore[t][0] = 0;
-			}
-
-			bool RecreateScores = str_comp(aScore[0], m_aScoreInfo[0].m_aScoreText) != 0 || str_comp(aScore[1], m_aScoreInfo[1].m_aScoreText) != 0 || m_LastLocalClientId != m_pClient->m_Snap.m_LocalClientId;
-			m_LastLocalClientId = m_pClient->m_Snap.m_LocalClientId;
-
-			bool RecreateRect = ForceScoreInfoInit;
-			for(int t = 0; t < 2; t++)
-			{
-				if(RecreateScores)
-				{
-					m_aScoreInfo[t].m_ScoreTextWidth = TextRender()->TextWidth(14.0f, aScore[t], -1, -1.0f);
-					str_copy(m_aScoreInfo[t].m_aScoreText, aScore[t]);
-					RecreateRect = true;
-				}
-
-				if(apPlayerInfo[t])
-				{
-					int Id = apPlayerInfo[t]->m_ClientId;
-					if(Id >= 0 && Id < MAX_CLIENTS)
-					{
-						const char *pName = m_pClient->m_aClients[Id].m_aName;
-						if(str_comp(pName, m_aScoreInfo[t].m_aPlayerNameText) != 0)
-							RecreateRect = true;
-					}
-				}
-				else
-				{
-					if(m_aScoreInfo[t].m_aPlayerNameText[0] != 0)
-						RecreateRect = true;
-				}
-
-				char aBuf[16];
-				str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
-				if(str_comp(aBuf, m_aScoreInfo[t].m_aRankText) != 0)
-					RecreateRect = true;
-			}
-
-			static float s_TextWidth10 = TextRender()->TextWidth(14.0f, "10", -1, -1.0f);
-			float ScoreWidthMax = maximum(maximum(m_aScoreInfo[0].m_ScoreTextWidth, m_aScoreInfo[1].m_ScoreTextWidth), s_TextWidth10);
-			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
-
-			for(int t = 0; t < 2; t++)
-			{
-				// draw box
-				if(RecreateRect)
-				{
-					Graphics()->DeleteQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex);
-
-					if(t == Local)
-						Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
-					else
-						Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
-					m_aScoreInfo[t].m_RoundRectQuadContainerIndex = Graphics()->CreateRectQuadContainer(m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split + PosSize, ScoreSingleBoxHeight, 5.0f, IGraphics::CORNER_L);
-				}
-				Graphics()->TextureClear();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-				if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
-					Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
-
-				if(RecreateScores)
-				{
-					CTextCursor Cursor;
-					TextRender()->SetCursor(&Cursor, m_Width - ScoreWidthMax + (ScoreWidthMax - m_aScoreInfo[t].m_ScoreTextWidth) - Split, StartY + t * 20 + (18.f - 14.f) / 2.f, 14.0f, TEXTFLAG_RENDER);
-					Cursor.m_LineWidth = -1;
-					TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_TextScoreContainerIndex, &Cursor, aScore[t]);
-				}
-				// draw score
-				if(m_aScoreInfo[t].m_TextScoreContainerIndex.Valid())
-				{
-					ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
-					ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
-					TextRender()->RenderTextContainer(m_aScoreInfo[t].m_TextScoreContainerIndex, TColor, TOutlineColor);
-				}
-
-				if(apPlayerInfo[t])
-				{
-					// draw name
-					int Id = apPlayerInfo[t]->m_ClientId;
-					if(Id >= 0 && Id < MAX_CLIENTS)
-					{
-						const char *pName = m_pClient->m_aClients[Id].m_aName;
-						if(RecreateRect)
-						{
-							str_copy(m_aScoreInfo[t].m_aPlayerNameText, pName);
-
-							CTextCursor Cursor;
-							float w = TextRender()->TextWidth(8.0f, pName, -1, -1.0f);
-							TextRender()->SetCursor(&Cursor, minimum(m_Width - w - 1.0f, m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize), StartY + (t + 1) * 20.0f - 2.0f, 8.0f, TEXTFLAG_RENDER);
-							Cursor.m_LineWidth = -1;
-							TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, &Cursor, pName);
-						}
-
-						if(m_aScoreInfo[t].m_OptionalNameTextContainerIndex.Valid())
-						{
-							ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
-							ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
-							TextRender()->RenderTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, TColor, TOutlineColor);
-						}
-
-						// draw tee
-						CTeeRenderInfo TeeInfo = m_pClient->m_aClients[Id].m_RenderInfo;
-						TeeInfo.m_Size = ScoreSingleBoxHeight;
-
-						const CAnimState *pIdleState = CAnimState::GetIdle();
-						vec2 OffsetToMid;
-						CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
-						vec2 TeeRenderPos(m_Width - ScoreWidthMax - TeeInfo.m_Size / 2 - Split, StartY + (t * 20) + ScoreSingleBoxHeight / 2.0f + OffsetToMid.y);
-
-						RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
-					}
-				}
-				else
-				{
-					m_aScoreInfo[t].m_aPlayerNameText[0] = 0;
-				}
-
-				// draw position
-				char aBuf[16];
-				str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
-				if(RecreateRect)
-				{
-					str_copy(m_aScoreInfo[t].m_aRankText, aBuf);
-
-					CTextCursor Cursor;
-					TextRender()->SetCursor(&Cursor, m_Width - ScoreWidthMax - ImageSize - Split - PosSize, StartY + t * 20 + (18.f - 10.f) / 2.f, 10.0f, TEXTFLAG_RENDER);
-					Cursor.m_LineWidth = -1;
-					TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_TextRankContainerIndex, &Cursor, aBuf);
-				}
-				if(m_aScoreInfo[t].m_TextRankContainerIndex.Valid())
-				{
-					ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
-					ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
-					TextRender()->RenderTextContainer(m_aScoreInfo[t].m_TextRankContainerIndex, TColor, TOutlineColor);
-				}
-
-				StartY += 8.0f;
-			}
+			RenderDefaultScoreHud();
 		}
 	}
 }
@@ -526,17 +243,17 @@ void CHud::RenderTextInfo()
 		int FrameTime = (int)(1.0f / m_FrameTimeAvg + 0.5f);
 		str_format(aBuf, sizeof(aBuf), "%d", FrameTime);
 
-		static float s_TextWidth0 = TextRender()->TextWidth(12.f, "0", -1, -1.0f);
-		static float s_TextWidth00 = TextRender()->TextWidth(12.f, "00", -1, -1.0f);
-		static float s_TextWidth000 = TextRender()->TextWidth(12.f, "000", -1, -1.0f);
-		static float s_TextWidth0000 = TextRender()->TextWidth(12.f, "0000", -1, -1.0f);
-		static float s_TextWidth00000 = TextRender()->TextWidth(12.f, "00000", -1, -1.0f);
+		static float s_TextWidth0 = TextRender()->TextWidth(s_DefaultFontSize, "0", -1, -1.0f);
+		static float s_TextWidth00 = TextRender()->TextWidth(s_DefaultFontSize, "00", -1, -1.0f);
+		static float s_TextWidth000 = TextRender()->TextWidth(s_DefaultFontSize, "000", -1, -1.0f);
+		static float s_TextWidth0000 = TextRender()->TextWidth(s_DefaultFontSize, "0000", -1, -1.0f);
+		static float s_TextWidth00000 = TextRender()->TextWidth(s_DefaultFontSize, "00000", -1, -1.0f);
 		static const float s_aTextWidth[5] = {s_TextWidth0, s_TextWidth00, s_TextWidth000, s_TextWidth0000, s_TextWidth00000};
 
 		int DigitIndex = GetDigitsIndex(FrameTime, 4);
 
 		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, m_Width - 10 - s_aTextWidth[DigitIndex], 5, 12, TEXTFLAG_RENDER);
+		TextRender()->SetCursor(&Cursor, m_Width - 10 - s_aTextWidth[DigitIndex], (s_DefaultHudBoxHeight - s_DefaultFontSize) / 2, s_DefaultFontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = -1;
 		auto OldFlags = TextRender()->GetRenderFlags();
 		TextRender()->SetRenderFlags(OldFlags | TEXT_RENDER_FLAG_ONE_TIME_USE);
@@ -656,8 +373,8 @@ void CHud::RenderCursor()
 
 void CHud::PrepareAmmoHealthAndArmorQuads()
 {
-	float x = 5;
-	float y = 5;
+	float x = 48;
+	float y = 0;
 	IGraphics::CQuadItem Array[10];
 
 	// ammo of the different weapons
@@ -665,7 +382,10 @@ void CHud::PrepareAmmoHealthAndArmorQuads()
 	{
 		// 0.6
 		for(int n = 0; n < 10; n++)
-			Array[n] = IGraphics::CQuadItem(x + n * 12, y, 10, 10);
+			if(n < 5)
+				Array[n] = IGraphics::CQuadItem(-x - n * 12, y, 10, 10);
+			else
+				Array[n] = IGraphics::CQuadItem(x + (n - 5) * 12, y, 10, 10);
 
 		m_aAmmoOffset[i] = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
 
@@ -687,42 +407,42 @@ void CHud::PrepareAmmoHealthAndArmorQuads()
 
 	// health
 	for(int i = 0; i < 10; ++i)
-		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 10, 10);
+		Array[i] = IGraphics::CQuadItem(-x - i * 12, y, 10, 10);
 	m_HealthOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
 
 	// 0.7
 	for(int i = 0; i < 10; ++i)
-		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 12, 12);
+		Array[i] = IGraphics::CQuadItem(-x - i * 12, y, 12, 12);
 	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
 
 	// empty health
 	for(int i = 0; i < 10; ++i)
-		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 10, 10);
+		Array[i] = IGraphics::CQuadItem(-x - i * 12, y, 10, 10);
 	m_EmptyHealthOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(-x - i * 12, y, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// armor meter
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 10, 10);
+	m_ArmorOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
 
 	// 0.7
 	for(int i = 0; i < 10; ++i)
 		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 12, 12);
 	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
 
-	// armor meter
-	for(int i = 0; i < 10; ++i)
-		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 10, 10);
-	m_ArmorOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
-
-	// 0.7
-	for(int i = 0; i < 10; ++i)
-		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 12, 12);
-	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
-
 	// empty armor meter
 	for(int i = 0; i < 10; ++i)
-		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 10, 10);
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 10, 10);
 	m_EmptyArmorOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
 
 	// 0.7
 	for(int i = 0; i < 10; ++i)
-		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 12, 12);
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 12, 12);
 	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
 }
 
@@ -737,7 +457,6 @@ void CHud::RenderAmmoHealthAndArmor(const CNetObj_Character *pCharacter)
 	if(GameClient()->m_GameInfo.m_HudAmmo)
 	{
 		// ammo display
-		float AmmoOffsetY = GameClient()->m_GameInfo.m_HudHealthArmor ? 24 : 0;
 		int CurWeapon = pCharacter->m_Weapon % NUM_WEAPONS;
 		// 0.7 only
 		if(CurWeapon == WEAPON_NINJA)
@@ -752,14 +471,7 @@ void CHud::RenderAmmoHealthAndArmor(const CNetObj_Character *pCharacter)
 		else if(CurWeapon >= 0 && m_pClient->m_GameSkin.m_aSpriteWeaponProjectiles[CurWeapon].IsValid())
 		{
 			Graphics()->TextureSet(m_pClient->m_GameSkin.m_aSpriteWeaponProjectiles[CurWeapon]);
-			if(AmmoOffsetY > 0)
-			{
-				Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, clamp(pCharacter->m_AmmoCount, 0, 10), 0, AmmoOffsetY);
-			}
-			else
-			{
-				Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, clamp(pCharacter->m_AmmoCount, 0, 10));
-			}
+			Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, minimum(pCharacter->m_AmmoCount, 10), m_Width / 2 - 5, m_Height - 24);
 		}
 	}
 
@@ -767,15 +479,15 @@ void CHud::RenderAmmoHealthAndArmor(const CNetObj_Character *pCharacter)
 	{
 		// health display
 		Graphics()->TextureSet(m_pClient->m_GameSkin.m_SpriteHealthFull);
-		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_HealthOffset + QuadOffsetSixup, minimum(pCharacter->m_Health, 10));
+		Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_HealthOffset, minimum(pCharacter->m_Health, 10), m_Width / 2 - 6, m_Height - 12); // - 60
 		Graphics()->TextureSet(m_pClient->m_GameSkin.m_SpriteHealthEmpty);
-		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_EmptyHealthOffset + QuadOffsetSixup + minimum(pCharacter->m_Health, 10), 10 - minimum(pCharacter->m_Health, 10));
+		Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_EmptyHealthOffset + minimum(pCharacter->m_Health, 10), 10 - minimum(pCharacter->m_Health, 10), m_Width / 2 - 5, m_Height - 12);
 
 		// armor display
 		Graphics()->TextureSet(m_pClient->m_GameSkin.m_SpriteArmorFull);
-		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_ArmorOffset + QuadOffsetSixup, minimum(pCharacter->m_Armor, 10));
+		Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_ArmorOffset, minimum(pCharacter->m_Armor, 10), m_Width / 2 - 5, m_Height - 12); // 48
 		Graphics()->TextureSet(m_pClient->m_GameSkin.m_SpriteArmorEmpty);
-		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_ArmorOffset + QuadOffsetSixup + minimum(pCharacter->m_Armor, 10), 10 - minimum(pCharacter->m_Armor, 10));
+		Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_ArmorOffset + minimum(pCharacter->m_Armor, 10), 10 - minimum(pCharacter->m_Armor, 10), m_Width / 2 - 5, m_Height - 12);
 	}
 }
 
@@ -1484,7 +1196,8 @@ void CHud::RenderMovementInformation()
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
-	Graphics()->DrawRect(m_Width - 180.0f, m_Height - 15.0f, 180.0f, 15.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_TL, 5.0f);
+	Graphics()->DrawRect(0, 0, m_Width, 16.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_NONE, 5.0f);
+	Graphics()->DrawRect(0, m_Height - 16.0f, m_Width, 16.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_NONE, 5.0f);
 
 	// draw the text
 	char aBuf[128];
@@ -1500,7 +1213,7 @@ void CHud::RenderSpectatorHud()
 	{
 		str_copy(aBuf, Localize("Free-View"));
 	}
-	TextRender()->Text(m_Width - 174.0f, m_Height - 15.0f + (15.f - 8.f) / 2.f, 8.0f, aBuf, -1.0f);
+	TextRender()->Text(8.0f, (15.0f - 8.0f) / 2.0f, 8.0f, aBuf, -1.0f);
 
 	// draw the camera info
 	if(m_pClient->m_Camera.SpectatingPlayer() && m_pClient->m_Camera.CanUseAutoSpecCamera() && g_Config.m_ClSpecAutoSync)
@@ -1513,13 +1226,13 @@ void CHud::RenderSpectatorHud()
 		constexpr float IconWidth = 6.0f;
 		constexpr float Padding = 3.0f;
 		const float TagWidth = IconWidth + TextWidth + Padding * 3.0f;
-		const float TagX = m_Width - RightMargin - TagWidth;
-		Graphics()->DrawRect(TagX, m_Height - 12.0f, TagWidth, 10.0f, ColorRGBA(1.0f, 1.0f, 1.0f, AutoSpecCameraEnabled ? 0.50f : 0.10f), IGraphics::CORNER_ALL, 2.5f);
+		const float TagX = RightMargin;
+		Graphics()->DrawRect(TagX, 12.0f, TagWidth, 10.0f, ColorRGBA(0.84f, 0.53f, 0.17f, AutoSpecCameraEnabled ? 0.85f : 0.25f), IGraphics::CORNER_ALL, 2.5f);
 		TextRender()->TextColor(1, 1, 1, AutoSpecCameraEnabled ? 1.0f : 0.65f);
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->Text(TagX + Padding, m_Height - 10.0f, 6.0f, FontIcons::FONT_ICON_CAMERA, -1.0f);
+		TextRender()->Text(TagX + Padding, 10.0f, 6.0f, FontIcons::FONT_ICON_CAMERA, -1.0f);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-		TextRender()->Text(TagX + Padding + IconWidth + Padding, m_Height - 10.0f, 6.0f, pLabelText, -1.0f);
+		TextRender()->Text(TagX + Padding + IconWidth + Padding, 10.0f, 6.0f, pLabelText, -1.0f);
 		TextRender()->TextColor(1, 1, 1, 1);
 	}
 }
@@ -1647,6 +1360,7 @@ void CHud::OnRender()
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 			RenderConnectionWarning();
 		RenderTeambalanceWarning();
+		RenderStatBars();
 		m_pClient->m_Voting.Render();
 		if(g_Config.m_ClShowRecord)
 			RenderRecord();
@@ -1815,5 +1529,427 @@ void CHud::RenderRecord()
 		str_time_float(PlayerRecord, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
 		str_format(aBuf, sizeof(aBuf), "%s%s", PlayerRecord > 3600 ? "" : "   ", aTime);
 		TextRender()->Text(53, 82, 6, aBuf, -1.0f);
+	}
+}
+
+void CHud::RenderDefaultScoreHud()
+{
+	static float s_TextWidth100 = TextRender()->TextWidth(s_DefaultFontSize, "999", -1, -1.0f);
+	float ScoreWidthMax = maximum(maximum(m_aScoreInfo[0].m_ScoreTextWidth, m_aScoreInfo[1].m_ScoreTextWidth), s_TextWidth100);
+	float Split = 3.0f;
+
+	float StartY = 0.0f; // the height of this display is 56, so EndY is 285
+	float BoxWidth = ScoreWidthMax + 16.0f + 2 * Split;
+	float Half = m_Width / 2.0f;
+	float BoxStart = Half - BoxWidth - 16;
+
+	bool ForceScoreInfoInit = !m_aScoreInfo[0].m_Initialized || !m_aScoreInfo[1].m_Initialized;
+
+	int Local = -1;
+	int aPos[2] = {1, 2};
+	const CNetObj_PlayerInfo *apPlayerInfo[2] = {0, 0};
+	int i = 0;
+	for(int t = 0; t < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_apInfoByScore[i]; ++i)
+	{
+		if(m_pClient->m_Snap.m_apInfoByScore[i]->m_Team != TEAM_SPECTATORS)
+		{
+			apPlayerInfo[t] = m_pClient->m_Snap.m_apInfoByScore[i];
+			if(apPlayerInfo[t]->m_ClientId == m_pClient->m_Snap.m_LocalClientId)
+				Local = t;
+			++t;
+		}
+	}
+	// search local player info if not a spectator, nor within top2 scores
+	if(Local == -1 && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
+	{
+		for(; i < MAX_CLIENTS && m_pClient->m_Snap.m_apInfoByScore[i]; ++i)
+		{
+			if(m_pClient->m_Snap.m_apInfoByScore[i]->m_Team != TEAM_SPECTATORS)
+				++aPos[1];
+			if(m_pClient->m_Snap.m_apInfoByScore[i]->m_ClientId == m_pClient->m_Snap.m_LocalClientId)
+			{
+				apPlayerInfo[1] = m_pClient->m_Snap.m_apInfoByScore[i];
+				Local = 1;
+				break;
+			}
+		}
+	}
+
+	char aScore[2][16];
+	for(int t = 0; t < 2; ++t)
+	{
+		if(apPlayerInfo[t])
+		{
+			str_format(aScore[t], sizeof(aScore[t]), "%d", apPlayerInfo[t]->m_Score);
+		}
+		else
+			aScore[t][0] = 0;
+	}
+
+	bool RecreateScores = str_comp(aScore[0], m_aScoreInfo[0].m_aScoreText) != 0 || str_comp(aScore[1], m_aScoreInfo[1].m_aScoreText) != 0 || m_LastLocalClientId != m_pClient->m_Snap.m_LocalClientId;
+	m_LastLocalClientId = m_pClient->m_Snap.m_LocalClientId;
+
+	bool RecreateRect = ForceScoreInfoInit;
+	for(int t = 0; t < 2; t++)
+	{
+		if(RecreateScores)
+		{
+			m_aScoreInfo[t].m_ScoreTextWidth = TextRender()->TextWidth(s_DefaultFontSize, aScore[t], -1, -1.0f);
+			str_copy(m_aScoreInfo[t].m_aScoreText, aScore[t]);
+			RecreateRect = true;
+		}
+
+		if(apPlayerInfo[t])
+		{
+			int Id = apPlayerInfo[t]->m_ClientId;
+			if(Id >= 0 && Id < MAX_CLIENTS)
+			{
+				const char *pName = m_pClient->m_aClients[Id].m_aName;
+				if(str_comp(pName, m_aScoreInfo[t].m_aPlayerNameText) != 0)
+					RecreateRect = true;
+			}
+		}
+		else
+		{
+			if(m_aScoreInfo[t].m_aPlayerNameText[0] != 0)
+				RecreateRect = true;
+		}
+
+		char aBuf[16];
+		str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
+		if(str_comp(aBuf, m_aScoreInfo[t].m_aRankText) != 0)
+			RecreateRect = true;
+	}
+
+	for(int t = 0; t < 2; t++)
+	{
+		// draw box
+		if(RecreateRect)
+		{
+			Graphics()->DeleteQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex);
+
+			if(t == Local)
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
+			else
+				Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
+			m_aScoreInfo[t].m_RoundRectQuadContainerIndex = Graphics()->CreateRectQuadContainer(BoxStart + t * (BoxWidth + 32), StartY, BoxWidth, s_DefaultHudBoxHeight, 5.0f, IGraphics::CORNER_B);
+		}
+		Graphics()->TextureClear();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
+			Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
+
+		if(RecreateScores)
+		{
+			CTextCursor Cursor;
+			TextRender()->SetCursor(&Cursor, BoxStart + t * (BoxWidth + 32) + s_DefaultFontSize / 4, StartY + (s_DefaultHudBoxHeight - s_DefaultFontSize) / 2, s_DefaultFontSize, TEXTFLAG_RENDER);
+			Cursor.m_LineWidth = -1;
+			TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_TextScoreContainerIndex, &Cursor, aScore[t]);
+		}
+		// draw score
+		if(m_aScoreInfo[t].m_TextScoreContainerIndex.Valid())
+		{
+			ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
+			ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
+			TextRender()->RenderTextContainer(m_aScoreInfo[t].m_TextScoreContainerIndex, TColor, TOutlineColor);
+		}
+
+		if(apPlayerInfo[t])
+		{
+			// draw name
+			int Id = apPlayerInfo[t]->m_ClientId;
+			if(Id >= 0 && Id < MAX_CLIENTS)
+			{
+				const char *pName = m_pClient->m_aClients[Id].m_aName;
+				if(RecreateRect)
+				{
+					str_copy(m_aScoreInfo[t].m_aPlayerNameText, pName);
+
+					CTextCursor Cursor;
+					// float w = TextRender()->TextWidth(4.0f, pName, -1, -1.0f);
+					TextRender()->SetCursor(&Cursor, BoxStart + t * (BoxWidth + 32) + s_DefaultFontSize / 4 + Split * 3, StartY + s_DefaultHudBoxHeight, s_DefaultFontSize / 2, TEXTFLAG_RENDER);
+					Cursor.m_LineWidth = -1;
+					TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, &Cursor, pName);
+				}
+
+				if(m_aScoreInfo[t].m_OptionalNameTextContainerIndex.Valid())
+				{
+					ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
+					ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
+					TextRender()->RenderTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, TColor, TOutlineColor);
+				}
+
+				// draw tee
+				CTeeRenderInfo TeeInfo = m_pClient->m_aClients[Id].m_RenderInfo;
+				TeeInfo.m_Size = s_DefaultHudBoxHeight;
+
+				const CAnimState *pIdleState = CAnimState::GetIdle();
+				vec2 OffsetToMid;
+				CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
+
+				float TeePosX = BoxStart + t * (BoxWidth + 32) + BoxWidth - TeeInfo.m_Size / 2;
+				float TeePosY = StartY + s_DefaultHudBoxHeight / 2.0f + OffsetToMid.y;
+
+				vec2 TeeRenderPos(TeePosX, TeePosY);
+
+				RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
+			}
+		}
+		else
+		{
+			m_aScoreInfo[t].m_aPlayerNameText[0] = 0;
+		}
+
+		// draw position
+		char aBuf[16];
+		str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
+		if(RecreateRect)
+		{
+			str_copy(m_aScoreInfo[t].m_aRankText, aBuf);
+
+			CTextCursor Cursor;
+			TextRender()->SetCursor(&Cursor, BoxStart + t * (BoxWidth + 32), StartY + s_DefaultHudBoxHeight, s_DefaultFontSize / 2, TEXTFLAG_RENDER);
+			Cursor.m_LineWidth = -1;
+			TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_TextRankContainerIndex, &Cursor, aBuf);
+		}
+		if(m_aScoreInfo[t].m_TextRankContainerIndex.Valid())
+		{
+			ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
+			ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
+			TextRender()->RenderTextContainer(m_aScoreInfo[t].m_TextRankContainerIndex, TColor, TOutlineColor);
+		}
+	}
+}
+
+void CHud::RenderTeamScoreHud()
+{
+	int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
+
+	static float s_TextWidth100 = TextRender()->TextWidth(s_DefaultFontSize, "999", -1, -1.0f);
+	float ScoreWidthMax = maximum(maximum(m_aScoreInfo[0].m_ScoreTextWidth, m_aScoreInfo[1].m_ScoreTextWidth), s_TextWidth100);
+	float Split = 3.0f;
+	float ImageSize = (GameFlags & GAMEFLAG_FLAGS) ? 16.0f : Split;
+
+	float StartY = 0.0f; // the height of this display is 56, so EndY is 285
+	float BoxWidth = ScoreWidthMax + ImageSize + 2 * Split;
+	float Half = m_Width / 2.0f;
+	float BoxStart = Half - BoxWidth - 16;
+
+	bool ForceScoreInfoInit = !m_aScoreInfo[0].m_Initialized || !m_aScoreInfo[1].m_Initialized;
+	char aScoreTeam[2][16];
+	str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam[TEAM_RED]), "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreRed);
+	str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam[TEAM_BLUE]), "%d", m_pClient->m_Snap.m_pGameDataObj->m_TeamscoreBlue);
+
+	bool aRecreateTeamScore[2] = {str_comp(aScoreTeam[0], m_aScoreInfo[0].m_aScoreText) != 0, str_comp(aScoreTeam[1], m_aScoreInfo[1].m_aScoreText) != 0};
+
+	const int aFlagCarrier[2] = {
+		m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierRed,
+		m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue};
+
+	bool RecreateRect = ForceScoreInfoInit;
+	for(int t = 0; t < 2; t++)
+	{
+		if(aRecreateTeamScore[t])
+		{
+			m_aScoreInfo[t].m_ScoreTextWidth = TextRender()->TextWidth(s_DefaultFontSize, aScoreTeam[t == 0 ? TEAM_RED : TEAM_BLUE], -1, -1.0f);
+			str_copy(m_aScoreInfo[t].m_aScoreText, aScoreTeam[t == 0 ? TEAM_RED : TEAM_BLUE]);
+			RecreateRect = true;
+		}
+	}
+	for(int t = 0; t < 2; t++)
+	{
+		// draw box
+		if(RecreateRect)
+		{
+			Graphics()->DeleteQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex);
+
+			Graphics()->SetColor(s_TeamColor[t]);
+			m_aScoreInfo[t].m_RoundRectQuadContainerIndex = Graphics()->CreateRectQuadContainer(BoxStart + t * (BoxWidth + 32), StartY, BoxWidth, s_DefaultHudBoxHeight, 5.0f, IGraphics::CORNER_B);
+		}
+		Graphics()->TextureClear();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
+			Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
+
+		// draw score
+		if(aRecreateTeamScore[t])
+		{
+			CTextCursor Cursor;
+			TextRender()->SetCursor(&Cursor, BoxStart + t * (BoxWidth + 32) + s_DefaultFontSize / 4, StartY + (s_DefaultHudBoxHeight - s_DefaultFontSize) / 2, s_DefaultFontSize, TEXTFLAG_RENDER);
+			Cursor.m_LineWidth = -1;
+			TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_TextScoreContainerIndex, &Cursor, aScoreTeam[t]);
+		}
+		if(m_aScoreInfo[t].m_TextScoreContainerIndex.Valid())
+		{
+			ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
+			ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
+			TextRender()->RenderTextContainer(m_aScoreInfo[t].m_TextScoreContainerIndex, TColor, TOutlineColor);
+		}
+
+		if(GameFlags & GAMEFLAG_FLAGS)
+		{
+			int BlinkTimer = (m_pClient->m_aFlagDropTick[t] != 0 &&
+						 (Client()->GameTick(g_Config.m_ClDummy) - m_pClient->m_aFlagDropTick[t]) / Client()->GameTickSpeed() >= 25) ?
+						 10 :
+						 20;
+
+			float FlagPosX = BoxStart + t * (BoxWidth + 32) + BoxWidth - s_DefaultFontSize;
+			float FlagPosY = StartY + (s_DefaultHudBoxHeight - (s_DefaultHudBoxHeight - 2)) / 2;
+
+			float NamePosX = BoxStart + t * (BoxWidth + 32) + s_DefaultFontSize / 4;
+			float NamePosY = StartY + s_DefaultHudBoxHeight;
+
+			if(aFlagCarrier[t] == FLAG_ATSTAND || (aFlagCarrier[t] == FLAG_TAKEN && ((Client()->GameTick(g_Config.m_ClDummy) / BlinkTimer) & 1)))
+			{
+				// draw flag
+				Graphics()->TextureSet(t == 0 ? m_pClient->m_GameSkin.m_SpriteFlagRed : m_pClient->m_GameSkin.m_SpriteFlagBlue);
+				Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
+				Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_FlagOffset, FlagPosX, FlagPosY);
+			}
+			else if(aFlagCarrier[t] >= 0)
+			{
+				// draw name of the flag holder
+				int Id = aFlagCarrier[t] % MAX_CLIENTS;
+				const char *pName = m_pClient->m_aClients[Id].m_aName;
+				if(str_comp(pName, m_aScoreInfo[t].m_aPlayerNameText) != 0 || RecreateRect)
+				{
+					str_copy(m_aScoreInfo[t].m_aPlayerNameText, pName);
+
+					// float w = TextRender()->TextWidth(4.0f, pName, -1, -1.0f);
+
+					CTextCursor Cursor;
+					TextRender()->SetCursor(&Cursor, NamePosX, NamePosY, s_DefaultFontSize / 2, TEXTFLAG_RENDER);
+					Cursor.m_LineWidth = -1;
+					TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, &Cursor, pName);
+				}
+
+				if(m_aScoreInfo[t].m_OptionalNameTextContainerIndex.Valid())
+				{
+					ColorRGBA TColor(1.f, 1.f, 1.f, 1.f);
+					ColorRGBA TOutlineColor(0.f, 0.f, 0.f, 0.3f);
+					TextRender()->RenderTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, TColor, TOutlineColor);
+				}
+
+				// draw tee of the flag holder
+				CTeeRenderInfo TeeInfo = m_pClient->m_aClients[Id].m_RenderInfo;
+				TeeInfo.m_Size = s_DefaultHudBoxHeight;
+
+				const CAnimState *pIdleState = CAnimState::GetIdle();
+				vec2 OffsetToMid;
+				CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
+
+				float TeePosX = BoxStart + t * (BoxWidth + 32) + BoxWidth - TeeInfo.m_Size / 2;
+				float TeePosY = StartY + s_DefaultHudBoxHeight / 2.0f + OffsetToMid.y;
+
+				vec2 TeeRenderPos(TeePosX, TeePosY);
+
+				RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
+			}
+		}
+	}
+}
+
+void CHud::RenderStatBars()
+{
+	if(!m_pClient->m_Snap.m_SpecInfo.m_Active)
+		return;
+
+	int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
+
+	if(GameFlags & GAMEFLAG_TEAMS)
+	{
+		const auto &aTeamSize = GameClient()->m_Snap.m_aTeamSize;
+
+		if(aTeamSize[TEAM_RED] > 8 || aTeamSize[TEAM_BLUE] > 8)
+			return;
+
+		const float HalfY = m_Height / 2;
+		// const float HalfX = m_Width / 2;
+		const float Spacing = 5.0f;
+		const float BoxHeight = 20.0f;
+		const float BoxWidth = 120.0f;
+
+		for(int t = TEAM_RED; t <= TEAM_BLUE; t++)
+		{
+			const float StartY = HalfY - (aTeamSize[t] * (BoxHeight + Spacing)) / 2 + Spacing;
+			const float StartX = t == 0 ? 0.0f : m_Width - BoxWidth;
+			float TeeEndX;
+
+			for(int i = 0; i < aTeamSize[t]; i++)
+			{
+				const auto *pClientInfo = m_pClient->m_Snap.m_apInfoByTeamName[aTeamSize[t] * t + i];
+
+				if(!pClientInfo)
+					continue;
+
+				int Id = pClientInfo->m_ClientId;
+
+				const auto *pCharInfo = &m_pClient->m_Snap.m_aCharacters[Id].m_Cur;
+
+				const float BoxStartY = StartY + i * (BoxHeight + Spacing);
+				CUIRect Row{StartX, BoxStartY, BoxWidth, BoxHeight};
+				CUIRect AddRow;
+
+				Row.Draw(ColorRGBA(0.3f, 0.3f, 0.3f, 0.3f), t == 0 ? IGraphics::CORNER_R : IGraphics::CORNER_L, 2.0f);
+
+				if(pCharInfo->m_Health)
+				{
+					Row.Margin(vec2(10.0f, 5.0f), &AddRow);
+					if(!t)
+						AddRow.VSplitLeft(AddRow.w * (pCharInfo->m_Health / 10.0f), &AddRow, 0);
+					else
+						AddRow.VSplitRight(AddRow.w * pCharInfo->m_Health / 10.0f, 0, &AddRow);
+
+					AddRow.Draw(s_TeamColor[t], IGraphics::CORNER_ALL, 2.0f);
+				}
+				if(pCharInfo->m_Armor)
+				{
+					Row.Margin(vec2(10.0f, 5.0f), &AddRow);
+					if(!t)
+						AddRow.VSplitLeft(AddRow.w * (pCharInfo->m_Armor / 10.0f), &AddRow, 0);
+					else
+						AddRow.VSplitRight(AddRow.w * (pCharInfo->m_Armor / 10.0f), 0, &AddRow);
+
+					AddRow.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), IGraphics::CORNER_ALL, 2.0f);
+				}
+
+				// render tee
+				{
+					CTeeRenderInfo TeeInfo = m_pClient->m_aClients[Id].m_RenderInfo;
+					TeeInfo.m_Size = BoxHeight * 0.75f;
+
+					const CAnimState *pIdleState = CAnimState::GetIdle();
+					vec2 OffsetToMid;
+					CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
+
+					float TeePosX = StartX + t * (BoxWidth - Spacing / 2) - 2 * ((float)t - 0.5f) * (TeeInfo.m_Size / 2);
+					float TeePosY = BoxStartY + BoxHeight / 2 + OffsetToMid.y;
+
+					TeeEndX = TeePosX;
+
+					vec2 TeeRenderPos(TeePosX, TeePosY);
+
+					RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(-2 * ((float)t - 0.5f), 0.0f), TeeRenderPos);
+				}
+
+				// render current weapon
+				{
+					// normal weapons
+					int Weapon = clamp(pCharInfo->m_Weapon, 0, NUM_WEAPONS - 1);
+					Graphics()->QuadsSetRotation(pi * 7 / 4);
+					Graphics()->TextureSet(m_pClient->m_GameSkin.m_aSpritePickupWeapons[Weapon]);
+					Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_aWeaponOffset[Weapon], (1 - t) * (StartX + BoxWidth) + t * (StartX), BoxStartY + BoxHeight / 2);
+					Graphics()->QuadsSetRotation(0);
+					Graphics()->TextureClear();
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+				}
+
+				// render name
+				{
+					const char *pName = m_pClient->m_aClients[Id].m_aName;
+					TextRender()->Text(t * (StartX + BoxWidth - Spacing * 4 - TextRender()->TextWidth(s_DefaultFontSize / 2, pName)) + (1 - t) * (TeeEndX + 2 * Spacing), BoxStartY + (BoxHeight - s_DefaultFontSize / 2) / 2.0f, s_DefaultFontSize / 2, pName);
+				}
+			}
+		}
 	}
 }
