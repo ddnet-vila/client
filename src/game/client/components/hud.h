@@ -166,6 +166,7 @@ private:
 	void RenderTeamStatsHud(int Team);
 	void RenderStatBars();
 	STextContainerIndex m_StatBarTextContainerIndex;
+	int m_aMirroredWeaponOffset[NUM_WEAPONS];
 };
 
 #endif
