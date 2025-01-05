@@ -516,6 +516,10 @@ void CHud::PreparePlayerStateQuads()
 		float Width = WeaponSpec.m_VisualSize * ScaleX * HudWeaponScale;
 		float Height = WeaponSpec.m_VisualSize * ScaleY * HudWeaponScale;
 		m_aWeaponOffset[Weapon] = RenderTools()->QuadContainerAddSprite(m_HudQuadContainerIndex, Width, Height);
+
+		Graphics()->QuadsSetSubsetFree(1, 0, 0, 0, 0, 1, 1, 1);
+		m_aMirroredWeaponOffset[Weapon] = RenderTools()->QuadContainerAddSprite(m_HudQuadContainerIndex, Width, Height);
+		Graphics()->QuadsSetSubset(0, 0, 1, 1);
 	}
 
 	// Quads for displaying capabilities
@@ -1854,30 +1858,41 @@ void CHud::RenderStatBars()
 	if(!m_pClient->m_Snap.m_SpecInfo.m_Active)
 		return;
 
-	int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
+	const CNetObj_GameInfo *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;
+	const CNetObj_GameData *pGameDataObj = GameClient()->m_Snap.m_pGameDataObj;
+	const int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
 
+		const auto &aTeamSize = GameClient()->m_Snap.m_aTeamSize;
+	int MaxTeam = TEAM_RED;
+	int TeamModulus[] = { aTeamSize[TEAM_RED], aTeamSize[TEAM_BLUE]};
+	
 	if(GameFlags & GAMEFLAG_TEAMS)
 	{
-		const auto &aTeamSize = GameClient()->m_Snap.m_aTeamSize;
+		MaxTeam = TEAM_BLUE;
+		TeamModulus[0] = 2;
+		TeamModulus[1] = 2;
+	}
+
+	
+	{
 
 		if(aTeamSize[TEAM_RED] > 8 || aTeamSize[TEAM_BLUE] > 8)
 			return;
 
 		const float HalfY = m_Height / 2;
 		// const float HalfX = m_Width / 2;
-		const float Spacing = 5.0f;
-		const float BoxHeight = 20.0f;
-		const float BoxWidth = 120.0f;
+		const float Spacing = 4.0f;
+		const float BoxHeight = 14.0f;
+		const float BoxWidth = 80.0f;
 
-		for(int t = TEAM_RED; t <= TEAM_BLUE; t++)
+		for(int t = TEAM_RED; t <= MaxTeam; t++)
 		{
 			const float StartY = HalfY - (aTeamSize[t] * (BoxHeight + Spacing)) / 2 + Spacing;
 			const float StartX = t == 0 ? 0.0f : m_Width - BoxWidth;
-			float TeeEndX;
 
 			for(int i = 0; i < aTeamSize[t]; i++)
 			{
-				const auto *pClientInfo = m_pClient->m_Snap.m_apInfoByTeamName[aTeamSize[t] * t + i];
+				const auto *pClientInfo = m_pClient->m_Snap.m_apInfoByTeamName[aTeamSize[t - 1] * t + i];
 
 				if(!pClientInfo)
 					continue;
@@ -1890,11 +1905,13 @@ void CHud::RenderStatBars()
 				CUIRect Row{StartX, BoxStartY, BoxWidth, BoxHeight};
 				CUIRect AddRow;
 
-				Row.Draw(ColorRGBA(0.3f, 0.3f, 0.3f, 0.3f), t == 0 ? IGraphics::CORNER_R : IGraphics::CORNER_L, 2.0f);
+				Row.Draw(ColorRGBA(0.3f, 0.3f, 0.3f, 0.5f), t == 0 ? IGraphics::CORNER_R : IGraphics::CORNER_L, 2.0f);
 
 				if(pCharInfo->m_Health)
 				{
 					Row.Margin(vec2(10.0f, 5.0f), &AddRow);
+					AddRow.Draw(ColorRGBA(0.3f, 0.3f, 0.3f, 0.3f), IGraphics::CORNER_ALL, 2.0f);
+
 					if(!t)
 						AddRow.VSplitLeft(AddRow.w * (pCharInfo->m_Health / 10.0f), &AddRow, 0);
 					else
@@ -1913,32 +1930,59 @@ void CHud::RenderStatBars()
 					AddRow.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), IGraphics::CORNER_ALL, 2.0f);
 				}
 
-				// render tee
+				// prepare render tee and flag
+				const float TeeSize = BoxHeight * 0.75f;
+				const float FlagSize = TeeSize * 1.2f;
+				CTeeRenderInfo TeeInfo = m_pClient->m_aClients[Id].m_RenderInfo;
+				TeeInfo.m_Size = TeeSize;
+
+				const CAnimState *pIdleState = CAnimState::GetIdle();
+				vec2 OffsetToMid;
+				CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
+
+				const float TeePosX = StartX + (1 - t) * (Spacing / 2) + t * (BoxWidth - Spacing / 2);
+				const float TeePosY = BoxStartY + BoxHeight / 2;
+
+				const vec2 TeeRenderPos(TeePosX - 2 * ((float)t - 0.5f) * (TeeSize / 2), TeePosY + OffsetToMid.y);
+
+				const float FlagPosX = TeePosX - t * FlagSize / 2;
+				const float FlagPosY = TeePosY - TeeSize;
+
+				// render flags
 				{
-					CTeeRenderInfo TeeInfo = m_pClient->m_aClients[Id].m_RenderInfo;
-					TeeInfo.m_Size = BoxHeight * 0.75f;
-
-					const CAnimState *pIdleState = CAnimState::GetIdle();
-					vec2 OffsetToMid;
-					CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
-
-					float TeePosX = StartX + t * (BoxWidth - Spacing / 2) - 2 * ((float)t - 0.5f) * (TeeInfo.m_Size / 2);
-					float TeePosY = BoxStartY + BoxHeight / 2 + OffsetToMid.y;
-
-					TeeEndX = TeePosX;
-
-					vec2 TeeRenderPos(TeePosX, TeePosY);
-
-					RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(-2 * ((float)t - 0.5f), 0.0f), TeeRenderPos);
+					if(pGameInfoObj && (pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS) &&
+						pGameDataObj && (pGameDataObj->m_FlagCarrierRed == pClientInfo->m_ClientId || pGameDataObj->m_FlagCarrierBlue == pClientInfo->m_ClientId))
+					{
+						Graphics()->BlendNormal();
+						Graphics()->TextureSet(pGameDataObj->m_FlagCarrierBlue == pClientInfo->m_ClientId ? GameClient()->m_GameSkin.m_SpriteFlagBlue : GameClient()->m_GameSkin.m_SpriteFlagRed);
+						Graphics()->QuadsBegin();
+						if(!t)
+							Graphics()->QuadsSetSubset(1.0f, 0.0f, 0.0f, 1.0f);
+						else
+							Graphics()->QuadsSetSubset(0.0f, 0.0f, 1.0f, 1.0f);
+						IGraphics::CQuadItem QuadItem(FlagPosX, FlagPosY, FlagSize / 2, FlagSize);
+						Graphics()->QuadsDrawTL(&QuadItem, 1);
+						Graphics()->QuadsEnd();
+					}
 				}
+
+				// render tee
+				RenderTools()->RenderTee(pIdleState, &TeeInfo, pCharInfo->m_Emote, vec2(-2 * ((float)t - 0.5f), 0.0f), TeeRenderPos);
 
 				// render current weapon
 				{
 					// normal weapons
 					int Weapon = clamp(pCharInfo->m_Weapon, 0, NUM_WEAPONS - 1);
-					Graphics()->QuadsSetRotation(pi * 7 / 4);
+					int Offset;
+
+					if(!t)
+						Offset = m_aWeaponOffset[Weapon];
+					else
+						Offset = m_aMirroredWeaponOffset[Weapon];
+
+					Graphics()->QuadsSetRotation(2 * (0.5 - t) * pi * 7 / 4);
 					Graphics()->TextureSet(m_pClient->m_GameSkin.m_aSpritePickupWeapons[Weapon]);
-					Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_aWeaponOffset[Weapon], (1 - t) * (StartX + BoxWidth) + t * (StartX), BoxStartY + BoxHeight / 2);
+					Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, Offset, (1 - t) * (StartX + BoxWidth) + t * (StartX), BoxStartY + BoxHeight / 2);
 					Graphics()->QuadsSetRotation(0);
 					Graphics()->TextureClear();
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1947,7 +1991,7 @@ void CHud::RenderStatBars()
 				// render name
 				{
 					const char *pName = m_pClient->m_aClients[Id].m_aName;
-					TextRender()->Text(t * (StartX + BoxWidth - Spacing * 4 - TextRender()->TextWidth(s_DefaultFontSize / 2, pName)) + (1 - t) * (TeeEndX + 2 * Spacing), BoxStartY + (BoxHeight - s_DefaultFontSize / 2) / 2.0f, s_DefaultFontSize / 2, pName);
+					TextRender()->Text(t * (StartX + BoxWidth - Spacing * 4 - TextRender()->TextWidth(s_DefaultFontSize / 2, pName)) + (1 - t) * (TeeRenderPos.x + 2 * Spacing), BoxStartY + (BoxHeight - s_DefaultFontSize / 2) / 2.0f, s_DefaultFontSize / 2, pName);
 				}
 			}
 		}
