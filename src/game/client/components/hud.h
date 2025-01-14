@@ -19,11 +19,11 @@ struct SScoreInfo
 	{
 		m_TextRankContainerIndex.Reset();
 		m_TextScoreContainerIndex.Reset();
-		m_RoundRectQuadContainerIndex = -1;
 		m_OptionalNameTextContainerIndex.Reset();
 		m_aScoreText[0] = 0;
 		m_aRankText[0] = 0;
 		m_aPlayerNameText[0] = 0;
+		m_aClanNameText[0] = 0;
 		m_ScoreTextWidth = 0.f;
 		m_Initialized = false;
 	}
@@ -34,7 +34,7 @@ struct SScoreInfo
 	char m_aScoreText[16];
 	char m_aRankText[16];
 	char m_aPlayerNameText[MAX_NAME_LENGTH];
-	int m_RoundRectQuadContainerIndex;
+	char m_aClanNameText[MAX_CLAN_LENGTH];
 	STextContainerIndex m_OptionalNameTextContainerIndex;
 
 	bool m_Initialized;
@@ -162,6 +162,8 @@ private:
 	int m_LockModeOffset;
 
 	// vila
+	const char *GetTeamName(int Team) const;
+	int GetTeamFlag(int Team) const;
 	void RenderDefaultScoreHud();
 	void RenderTeamScoreHud();
 	void RenderTeamStatsHud(int Team);
