@@ -479,14 +479,9 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 			if((!GameClient()->m_Snap.m_SpecInfo.m_Active && pInfo->m_Local) ||
 				(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == SPEC_FREEVIEW && pInfo->m_Local) ||
 				(GameClient()->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientId == GameClient()->m_Snap.m_SpecInfo.m_SpectatorId))
-			{
 				Row.Draw4(ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), IGraphics::CORNER_NONE, RoundRadius);
-			}
-			else 
-			{
+			else
 				Row.Draw4(ColorRGBA(0.3f, 0.3f, 0.3f, 0.0f), ColorRGBA(0.3f, 0.3f, 0.3f, 0.3f), ColorRGBA(0.3f, 0.3f, 0.3f, 0.0f), ColorRGBA(0.3f, 0.3f, 0.3f, 0.3f), IGraphics::CORNER_NONE, RoundRadius);
-
-			}
 
 			// CTF flag
 			if(pGameInfoObj && (pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS) &&
