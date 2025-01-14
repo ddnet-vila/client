@@ -192,7 +192,6 @@ void CHud::RenderScoreHud()
 		if(m_pClient->m_GameInfo.m_TimeScore || (Client()->IsSixup() && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE))
 			return;
 
-		int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
 		m_aScoreInfo[0].m_Initialized = m_aScoreInfo[1].m_Initialized = true;
 
 		if(m_pClient->IsTeamPlay() && m_pClient->m_Snap.m_pGameDataObj)
