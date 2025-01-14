@@ -1804,12 +1804,21 @@ void CHud::RenderTeamScoreHud()
 				Graphics()->BlendNormal();
 				Graphics()->TextureSet(pFlag->m_Texture);
 				Graphics()->QuadsBegin();
-				Graphics()->QuadsSetRotation(pi / 12);
+
+				const float FlagTransparency = 0.2f;
+				const ColorRGBA ColorfulEdge = ColorRGBA(1.0f, 1.0f, 1.0f, FlagTransparency);
+				const ColorRGBA TransparentEdge = ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f);
+
+				Graphics()->QuadsSetSubset(0, 0, 3, 1);
 				if(t)
-					Graphics()->SetColor4(ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f));
+					Graphics()->SetColor4(TransparentEdge, ColorfulEdge, TransparentEdge, ColorfulEdge);
 				else
-					Graphics()->SetColor4(ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.3f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
-				IGraphics::CQuadItem QuadItem(SubBoxStart - BoxWidth * 0.8f, StartY - BoxWidth * 0.4f,  2.5f * BoxWidth, 2.5f * 0.258f * BoxWidth);
+					Graphics()->SetColor4(ColorfulEdge, TransparentEdge, ColorfulEdge, TransparentEdge);
+				IGraphics::CQuadItem QuadItem(SubBoxStart - BoxWidth * 0.5f - BoxWidth * 2 * 2.5f * 1.08f + t * BoxWidth * 2 * 2.5f * 1.08f, StartY - 1.1f * BoxWidth, 3 * 2.5f * BoxWidth, 2.5f * 0.5f * BoxWidth);
+				if(t)
+					Graphics()->QuadsSetRotation(2 * pi - pi / 12);
+				else
+					Graphics()->QuadsSetRotation(pi / 12);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();
 				Graphics()->ClipDisable();
