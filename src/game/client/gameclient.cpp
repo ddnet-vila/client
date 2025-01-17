@@ -137,7 +137,7 @@ void CGameClient::OnConsoleInit()
 					      &m_NamePlates,
 					      &m_Particles.m_RenderExtra,
 					      &m_Particles.m_RenderGeneral,
-						  &m_Flow,
+					      &m_Flow,
 					      &m_FreezeBars,
 					      &m_DamageInd,
 					      &m_Hud,
