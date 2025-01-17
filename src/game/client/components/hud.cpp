@@ -1937,14 +1937,9 @@ void CHud::RenderStatBars()
 
 	const auto &aTeamSize = GameClient()->m_Snap.m_aTeamSize;
 	int MaxTeam = TEAM_RED;
-	int TeamModulus[] = {aTeamSize[TEAM_RED], aTeamSize[TEAM_BLUE]};
 
 	if(GameFlags & GAMEFLAG_TEAMS)
-	{
 		MaxTeam = TEAM_BLUE;
-		TeamModulus[0] = 2;
-		TeamModulus[1] = 2;
-	}
 
 	{
 		if(aTeamSize[TEAM_RED] > 8 || aTeamSize[TEAM_BLUE] > 8)
@@ -1971,18 +1966,20 @@ void CHud::RenderStatBars()
 				int Id = pClientInfo->m_ClientId;
 
 				const auto *pCharInfo = &m_pClient->m_Snap.m_aCharacters[Id].m_Cur;
+				const bool IsActive = m_pClient->m_Snap.m_aCharacters[Id].m_Active;
 
 				const float BoxStartY = StartY + i * (BoxHeight + Spacing);
 				CUIRect Row{StartX, BoxStartY, BoxWidth, BoxHeight};
 				CUIRect AddRow;
 
-				Row.Draw(ColorRGBA(0.3f, 0.3f, 0.3f, 0.5f), t == 0 ? IGraphics::CORNER_R : IGraphics::CORNER_L, 2.0f);
+				Row.Draw(ColorRGBA(0.f, 0.f, 0.f, IsActive ? 0.2f : 0.1f), t == 0 ? IGraphics::CORNER_R : IGraphics::CORNER_L, 2.0f);
 
-				if(pCharInfo->m_Health)
+				if(IsActive)
+					AddRow.Draw(ColorRGBA(0.f, 0.f, 0.f, 0.1f), IGraphics::CORNER_ALL, 2.0f);
+
+				if(IsActive && pCharInfo->m_Health)
 				{
 					Row.Margin(vec2(10.0f, 5.0f), &AddRow);
-					AddRow.Draw(ColorRGBA(0.3f, 0.3f, 0.3f, 0.3f), IGraphics::CORNER_ALL, 2.0f);
-
 					if(!t)
 						AddRow.VSplitLeft(AddRow.w * (pCharInfo->m_Health / 10.0f), &AddRow, 0);
 					else
@@ -1990,7 +1987,7 @@ void CHud::RenderStatBars()
 
 					AddRow.Draw(s_TeamColor[t], IGraphics::CORNER_ALL, 2.0f);
 				}
-				if(pCharInfo->m_Armor)
+				if(IsActive && pCharInfo->m_Armor)
 				{
 					Row.Margin(vec2(10.0f, 5.0f), &AddRow);
 					if(!t)
@@ -2041,6 +2038,7 @@ void CHud::RenderStatBars()
 				RenderTools()->RenderTee(pIdleState, &TeeInfo, pCharInfo->m_Emote, vec2(-2 * ((float)t - 0.5f), 0.0f), TeeRenderPos);
 
 				// render current weapon
+				if(IsActive)
 				{
 					// normal weapons
 					int Weapon = clamp(pCharInfo->m_Weapon, 0, NUM_WEAPONS - 1);
