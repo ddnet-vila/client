@@ -1,7 +1,11 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "flow.h"
+
+#include <engine/client.h>
 #include <engine/graphics.h>
+#include <engine/shared/config.h>
+
 #include <game/layers.h>
 #include <game/mapitems.h>
 
@@ -11,6 +15,23 @@ CFlow::CFlow()
 	m_Height = 0;
 	m_Width = 0;
 	m_Spacing = 16;
+}
+
+void CFlow::OnMapLoad()
+{
+	Init();
+}
+
+void CFlow::OnStateChange(int NewState, int OldState)
+{
+	if(NewState != IClient::STATE_ONLINE && NewState != IClient::STATE_DEMOPLAYBACK)
+		Clear();
+}
+
+void CFlow::OnRender()
+{
+	if(g_Config.m_DbgFlow)
+		DbgRender();
 }
 
 void CFlow::DbgRender()
@@ -40,10 +61,15 @@ void CFlow::DbgRender()
 	Graphics()->LinesEnd();
 }
 
-void CFlow::Init()
+void CFlow::Clear()
 {
 	free(m_pCells);
 	m_pCells = nullptr;
+}
+
+void CFlow::Init()
+{
+	Clear();
 
 	CMapItemLayerTilemap *pTilemap = Layers()->GameLayer();
 	m_Width = pTilemap->m_Width * 32 / m_Spacing;
