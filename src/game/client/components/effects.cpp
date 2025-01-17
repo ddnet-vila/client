@@ -36,7 +36,7 @@ void CEffects::AirJump(vec2 Pos, float Alpha)
 	p.m_Rotspeed = pi * 2;
 	p.m_Gravity = 500;
 	p.m_Friction = 0.7f;
-	p.m_FlowAffected = 0.0f;
+	p.m_FlowAffected = 0.1f;
 	p.m_Color.a = Alpha;
 	p.m_StartAlpha = Alpha;
 	m_pClient->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
@@ -70,7 +70,7 @@ void CEffects::PowerupShine(vec2 Pos, vec2 Size, float Alpha)
 	p.m_Rotspeed = pi * 2;
 	p.m_Gravity = 500;
 	p.m_Friction = 0.9f;
-	p.m_FlowAffected = 0.0f;
+	p.m_FlowAffected = 2.0f;
 	p.m_Color.a = Alpha;
 	p.m_StartAlpha = Alpha;
 	m_pClient->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
