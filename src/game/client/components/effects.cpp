@@ -22,10 +22,28 @@ CEffects::CEffects()
 	m_Add100hz = false;
 }
 
+void CEffects::Smoke(vec2 Pos, vec2 Vel, float Alpha)
+{
+	CParticle p;
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());
+	p.m_Spr = SPRITE_PART_SMOKE;
+	p.m_Pos = Pos;
+	p.m_Vel = Vel;
+	p.m_LifeSpan = random_float(0.5f, 0.9f);
+	p.m_StartSize = random_float(32.0f, 40.0f);
+	p.m_EndSize = 0;
+	p.m_Gravity = random_float(-800.0f);
+	p.m_Friction = 0.4f;
+	p.m_Color = mix(vec4(0.75f, 0.75f, 0.75f, 1.0f), vec4(0.5f, 0.5f, 0.5f, 1.0f), random_float());
+	p.m_Color.a *= Alpha;
+	p.m_StartAlpha = p.m_Color.a;
+	m_pClient->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
+}
+
 void CEffects::AirJump(vec2 Pos, float Alpha)
 {
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_AIRJUMP;
 	p.m_Pos = Pos + vec2(-6.0f, 16.0f);
 	p.m_Vel = vec2(0, -200);
@@ -36,7 +54,7 @@ void CEffects::AirJump(vec2 Pos, float Alpha)
 	p.m_Rotspeed = pi * 2;
 	p.m_Gravity = 500;
 	p.m_Friction = 0.7f;
-	p.m_FlowAffected = 0.1f;
+	p.m_FlowAffected = 0.1f * GameClient()->m_Flow.GetSpacing();
 	p.m_Color.a = Alpha;
 	p.m_StartAlpha = Alpha;
 	m_pClient->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
@@ -59,7 +77,7 @@ void CEffects::PowerupShine(vec2 Pos, vec2 Size, float Alpha)
 		return;
 
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_SLICE;
 	p.m_Pos = Pos + vec2(random_float(-0.5f, 0.5f), random_float(-0.5f, 0.5f)) * Size;
 	p.m_Vel = vec2(0, 0);
@@ -70,7 +88,7 @@ void CEffects::PowerupShine(vec2 Pos, vec2 Size, float Alpha)
 	p.m_Rotspeed = pi * 2;
 	p.m_Gravity = 500;
 	p.m_Friction = 0.9f;
-	p.m_FlowAffected = 2.0f;
+	p.m_FlowAffected = 0.0f;
 	p.m_Color.a = Alpha;
 	p.m_StartAlpha = Alpha;
 	m_pClient->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
@@ -82,7 +100,7 @@ void CEffects::FreezingFlakes(vec2 Pos, vec2 Size, float Alpha)
 		return;
 
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_SNOWFLAKE;
 	p.m_Pos = Pos + vec2(random_float(-0.5f, 0.5f), random_float(-0.5f, 0.5f)) * Size;
 	p.m_Vel = vec2(0, 0);
@@ -109,7 +127,7 @@ void CEffects::SparkleTrail(vec2 Pos, float Alpha)
 		return;
 
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_SPARKLE;
 	p.m_Pos = Pos + random_direction() * random_float(40.0f);
 	p.m_Vel = vec2(0, 0);
@@ -129,7 +147,7 @@ void CEffects::SmokeTrail(vec2 Pos, vec2 Vel, float Alpha, float TimePassed)
 		return;
 
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_SMOKE;
 	p.m_Pos = Pos;
 	p.m_Vel = Vel + random_direction() * 50.0f;
@@ -149,7 +167,7 @@ void CEffects::SkidTrail(vec2 Pos, vec2 Vel, float Alpha)
 		return;
 
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_SMOKE;
 	p.m_Pos = Pos;
 	p.m_Vel = Vel + random_direction() * 50.0f;
@@ -169,7 +187,7 @@ void CEffects::BulletTrail(vec2 Pos, float Alpha, float TimePassed)
 		return;
 
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_BALL;
 	p.m_Pos = Pos;
 	p.m_LifeSpan = random_float(0.25f, 0.5f);
@@ -186,7 +204,7 @@ void CEffects::PlayerSpawn(vec2 Pos, float Alpha)
 	for(int i = 0; i < 32; i++)
 	{
 		CParticle p;
-		p.SetDefault();
+		p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 		p.m_Spr = SPRITE_PART_SHELL;
 		p.m_Pos = Pos;
 		p.m_Vel = random_direction() * (std::pow(random_float(), 3) * 600.0f);
@@ -244,7 +262,7 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientId, float Alpha)
 	for(int i = 0; i < 64; i++)
 	{
 		CParticle p;
-		p.SetDefault();
+		p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 		p.m_Spr = SPRITE_PART_SPLAT01 + (rand() % 3);
 		p.m_Pos = Pos;
 		p.m_Vel = random_direction() * (random_float(0.1f, 1.1f) * 900.0f);
@@ -277,7 +295,7 @@ void CEffects::Confetti(vec2 Pos, float Alpha)
 	for(int i = 0; i < 32; i++)
 	{
 		CParticle p;
-		p.SetDefault();
+		p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 		p.m_Spr = SPRITE_PART_SPLAT01 + (rand() % 3);
 		p.m_Pos = Pos;
 		p.m_Vel = direction(-0.5f * pi + random_float(-0.2f, 0.2f)) * random_float(0.01f, 1.0f) * 2000.0f;
@@ -298,7 +316,7 @@ void CEffects::Confetti(vec2 Pos, float Alpha)
 	for(int i = 0; i < 32; i++)
 	{
 		CParticle p;
-		p.SetDefault();
+		p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 		p.m_Spr = SPRITE_PART_SPLAT01 + (rand() % 3);
 		p.m_Pos = Pos;
 		p.m_Vel = direction(-0.5f * pi + random_float(-0.8f, 0.8f)) * random_float(0.01f, 1.0f) * 1500.0f;
@@ -326,12 +344,12 @@ void CEffects::Explosion(vec2 Pos, float Alpha)
 				continue;
 
 			float a = 1 - (length(vec2(x, y)) / length(vec2(8, 8)));
-			m_pClient->m_Flow.Add(Pos + vec2(x, y) * 16, normalize(vec2(x, y)) * 5000.0f * a, 10.0f);
+			m_pClient->m_Flow.Add(Pos + vec2(x, y) * 16, normalize(vec2(x, y)) * 1000.0f * a, 10.0f);
 		}
 
 	// add the explosion
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_EXPL01;
 	p.m_Pos = Pos;
 	p.m_LifeSpan = 0.4f;
@@ -367,19 +385,7 @@ void CEffects::Explosion(vec2 Pos, float Alpha)
 	// add the smoke
 	for(int i = 0; i < 24; i++)
 	{
-		p.SetDefault();
-		p.m_Spr = SPRITE_PART_SMOKE;
-		p.m_Pos = Pos;
-		p.m_Vel = random_direction() * (random_float(1.0f, 1.2f) * 1000.0f);
-		p.m_LifeSpan = random_float(0.5f, 0.9f);
-		p.m_StartSize = random_float(32.0f, 40.0f);
-		p.m_EndSize = 0;
-		p.m_Gravity = random_float(-800.0f);
-		p.m_Friction = 0.4f;
-		p.m_Color = mix(vec4(0.75f, 0.75f, 0.75f, 1.0f), vec4(0.5f, 0.5f, 0.5f, 1.0f), random_float());
-		p.m_Color.a *= Alpha;
-		p.m_StartAlpha = p.m_Color.a;
-		m_pClient->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
+		Smoke(Pos, random_direction() * (random_float(1.0f, 1.2f) * 1000.0f));
 	}
 }
 
@@ -387,7 +393,7 @@ void CEffects::HammerHit(vec2 Pos, float Alpha)
 {
 	// add the explosion
 	CParticle p;
-	p.SetDefault();
+	p.SetDefault(GameClient()->m_Flow.GetSpacing());;
 	p.m_Spr = SPRITE_PART_HIT01;
 	p.m_Pos = Pos;
 	p.m_LifeSpan = 0.3f;
