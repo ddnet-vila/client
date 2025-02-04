@@ -29,6 +29,9 @@ public:
 	virtual void OnStateChange(int NewState, int OldState) override;
 	virtual void OnRender() override;
 
+	void SetSpacing(int Spacing);
+	int GetSpacing() const;
+
 	vec2 Get(vec2 Pos);
 	void Add(vec2 Pos, vec2 Vel, float Size);
 	void Update();

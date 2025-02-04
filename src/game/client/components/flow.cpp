@@ -14,11 +14,12 @@ CFlow::CFlow()
 	m_pCells = nullptr;
 	m_Height = 0;
 	m_Width = 0;
-	m_Spacing = 16;
+	m_Spacing = 0;
 }
 
 void CFlow::OnMapLoad()
 {
+	Clear();
 	Init();
 }
 
@@ -71,6 +72,8 @@ void CFlow::Init()
 {
 	Clear();
 
+	m_Spacing = g_Config.m_FlSpacing;
+
 	CMapItemLayerTilemap *pTilemap = Layers()->GameLayer();
 	m_Width = pTilemap->m_Width * 32 / m_Spacing;
 	m_Height = pTilemap->m_Height * 32 / m_Spacing;
@@ -102,7 +105,7 @@ vec2 CFlow::Get(vec2 Pos)
 	if(x < 0 || y < 0 || x >= m_Width || y >= m_Height)
 		return vec2(0, 0);
 
-	return m_pCells[y * m_Width + x].m_Vel;
+	return m_pCells[y * m_Width + x].m_Vel / m_Spacing;
 }
 
 void CFlow::Add(vec2 Pos, vec2 Vel, float Size)
@@ -112,8 +115,36 @@ void CFlow::Add(vec2 Pos, vec2 Vel, float Size)
 
 	int x = (int)(Pos.x / m_Spacing);
 	int y = (int)(Pos.y / m_Spacing);
-	if(x < 0 || y < 0 || x >= m_Width || y >= m_Height)
-		return;
 
-	m_pCells[y * m_Width + x].m_Vel += Vel;
+	int Radius = Size / m_Spacing;
+
+	for(int i = -Radius / 2; i <= Radius / 2; i++)
+	{
+		for(int j = -Radius / 2; j <= Radius / 2; j++)
+		{
+			int Nx = x + i;
+			int Ny = y + j;
+
+			if(Nx < 0 || Ny < 0 || Nx >= m_Width || Ny >= m_Height)
+				continue;
+			
+			if(distance(vec2(x, y), vec2(Nx, Ny)) > Radius)
+				continue;
+
+			m_pCells[Ny * m_Width + Nx].m_Vel += Vel / m_Spacing;
+		}
+	}
+}
+
+void CFlow::SetSpacing(int Spacing)
+{
+	Clear();
+	m_Spacing = Spacing;
+
+	Init();
+}
+
+int CFlow::GetSpacing() const
+{
+	return m_Spacing;
 }

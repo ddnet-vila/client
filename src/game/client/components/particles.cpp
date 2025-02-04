@@ -4,11 +4,12 @@
 #include <engine/demo.h>
 #include <engine/graphics.h>
 
-#include "particles.h"
 #include <game/client/render.h>
 #include <game/generated/client_data.h>
 
 #include <game/client/gameclient.h>
+
+#include "particles.h"
 
 CParticles::CParticles()
 {
@@ -343,4 +344,23 @@ void CParticles::RenderGroup(int Group)
 		Graphics()->WrapNormal();
 		Graphics()->BlendNormal();
 	}
+}
+
+void CParticle::SetDefault(float FlowAffected)
+{
+	m_Pos = vec2(0, 0);
+	m_Vel = vec2(0, 0);
+	m_LifeSpan = 0;
+	m_StartSize = 32;
+	m_EndSize = 32;
+	m_UseAlphaFading = false;
+	m_StartAlpha = 1;
+	m_EndAlpha = 1;
+	m_Rot = 0;
+	m_Rotspeed = 0;
+	m_Gravity = 0;
+	m_Friction = 0;
+	m_FlowAffected = FlowAffected;
+	m_Color = ColorRGBA(1, 1, 1, 1);
+	m_Collides = true;
 }

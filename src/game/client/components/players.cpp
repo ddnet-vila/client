@@ -424,6 +424,8 @@ void CPlayers::RenderHook(
 			s_aHookChainRenderInfo[HookChainCount].m_Pos[1] = p.y;
 			s_aHookChainRenderInfo[HookChainCount].m_Scale = 1;
 			s_aHookChainRenderInfo[HookChainCount].m_Rotation = angle(Dir) + pi;
+
+			m_pClient->m_Flow.Add(p, -Dir * 1640.0f, 16.0f);
 		}
 		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookChain);
 		Graphics()->RenderQuadContainerAsSpriteMultiple(m_WeaponEmoteQuadContainerIndex, QuadOffset, HookChainCount, s_aHookChainRenderInfo);
@@ -500,7 +502,7 @@ void CPlayers::RenderPlayer(
 		Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 	vec2 Vel = mix(vec2(Prev.m_VelX / 256.0f, Prev.m_VelY / 256.0f), vec2(Player.m_VelX / 256.0f, Player.m_VelY / 256.0f), IntraTick);
 
-	m_pClient->m_Flow.Add(Position, Vel * 100.0f, 10.0f);
+	m_pClient->m_Flow.Add(Position, Vel * 100.0f, 32.0f);
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped & 2 ? false : true;
 
@@ -755,6 +757,8 @@ void CPlayers::RenderPlayer(
 			case WEAPON_SHOTGUN: RenderHand(&RenderInfo, WeaponPosition, Direction, -pi / 2, vec2(-5, 4), Alpha); break;
 			case WEAPON_GRENADE: RenderHand(&RenderInfo, WeaponPosition, Direction, -pi / 2, vec2(-4, 7), Alpha); break;
 			}
+
+			m_pClient->m_Flow.Add(WeaponPosition, Direction * 640.0f, 4.0f);
 		}
 	}
 
