@@ -19,6 +19,7 @@ public:
 
 	virtual void OnRender() override;
 
+	void Smoke(vec2 Pos, vec2 Vel, float Alpha = 1.f);
 	void BulletTrail(vec2 Pos, float Alpha = 1.f, float TimePassed = 0.f);
 	void SmokeTrail(vec2 Pos, vec2 Vel, float Alpha = 1.f, float TimePassed = 0.f);
 	void SkidTrail(vec2 Pos, vec2 Vel, float Alpha = 1.0f);

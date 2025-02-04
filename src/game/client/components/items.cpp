@@ -99,6 +99,8 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 
 	vec2 Vel = Pos - PrevPos;
 
+	GameClient()->m_Flow.Add(Pos + normalize(Vel) * 8.f, normalize(Vel) * 3000.f, 20.f);
+
 	// add particle for this projectile
 	// don't check for validity of the projectile for the current weapon here, so particle effects are rendered for mod compatibility
 	if(CurWeapon == WEAPON_GRENADE)
@@ -376,6 +378,9 @@ void CItems::OnRender()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
+
+	//m_pClient->m_Effects.SmokeTrail(vec2(32 * 32, 21 * 32),  vec2(0, -1));
+	//m_pClient->m_Effects.Explosion(vec2(32 * 32, 21 * 32 + 18));
 
 	bool IsSuper = m_pClient->IsLocalCharSuper();
 	int Ticks = Client()->GameTick(g_Config.m_ClDummy) % Client()->GameTickSpeed();
