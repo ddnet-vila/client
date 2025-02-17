@@ -21,6 +21,7 @@ class CFlow : public CComponent
 	void Clear();
 	void Init();
 
+	void ApplyToFlowZone(std::function<void(CFlow *, int, int)> &&Function);
 public:
 	CFlow();
 	virtual int Sizeof() const override { return sizeof(*this); }
