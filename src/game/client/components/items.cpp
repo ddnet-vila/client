@@ -90,6 +90,7 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 
 	vec2 Pos = CalcPos(pCurrent->m_StartPos, pCurrent->m_StartVel, Curvature, Speed, Ct);
 	vec2 PrevPos = CalcPos(pCurrent->m_StartPos, pCurrent->m_StartVel, Curvature, Speed, Ct - 0.001f);
+	vec2 TriplePrevPos = CalcPos(pCurrent->m_StartPos, pCurrent->m_StartVel, Curvature, Speed, Ct - 0.003f);
 
 	float Alpha = 1.f;
 	if(IsOtherTeam)
@@ -105,7 +106,7 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 	// don't check for validity of the projectile for the current weapon here, so particle effects are rendered for mod compatibility
 	if(CurWeapon == WEAPON_GRENADE)
 	{
-		m_pClient->m_Effects.SmokeTrail(Pos, Vel * -1, Alpha);
+		m_pClient->m_Effects.SmokeTrail(TriplePrevPos, Vel * -1, Alpha);
 		static float s_Time = 0.0f;
 		static float s_LastLocalTime = LocalTime();
 
@@ -126,7 +127,7 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 	}
 	else
 	{
-		m_pClient->m_Effects.BulletTrail(Pos, Alpha);
+		m_pClient->m_Effects.BulletTrail(PrevPos, Alpha);
 
 		if(length(Vel) > 0.00001f)
 			Graphics()->QuadsSetRotation(angle(Vel));
@@ -681,7 +682,7 @@ void CItems::ReconstructSmokeTrail(const CProjectileData *pCurrent, int DestroyT
 			TimePassed = minimum(TimePassed, (TimePassed - MinTrailSpan) / (Pt - MinTrailSpan) * (MinTrailSpan * 0.5f) + MinTrailSpan);
 		// add particle for this projectile
 		if(pCurrent->m_Type == WEAPON_GRENADE)
-			m_pClient->m_Effects.SmokeTrail(Pos, Vel * -1, Alpha, TimePassed);
+			m_pClient->m_Effects.SmokeTrail(PrevPos, Vel * -1, Alpha, TimePassed);
 		else
 			m_pClient->m_Effects.BulletTrail(Pos, Alpha, TimePassed);
 	}

@@ -9,6 +9,8 @@
 #include <game/layers.h>
 #include <game/mapitems.h>
 
+#include <game/client/gameclient.h>
+
 CFlow::CFlow()
 {
 	m_pCells = nullptr;
@@ -44,8 +46,22 @@ void CFlow::DbgRender()
 	int NumItems = 0;
 	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
-	for(int y = 0; y < m_Height; y++)
-		for(int x = 0; x < m_Width; x++)
+
+	vec2 PlayerPos = GameClient()->m_LocalCharacterPos / m_Spacing;
+
+	int Nx = PlayerPos.x;
+	int Ny = PlayerPos.y;
+
+	const int AbsoluteRandomMagicNumber = 640 / m_Spacing;
+
+	const int CurrentY = clamp(Ny - AbsoluteRandomMagicNumber, 0, m_Height);
+	const int MaxY = clamp(Ny + AbsoluteRandomMagicNumber, 0, m_Height);
+
+	const int CurrentX = clamp(Nx - AbsoluteRandomMagicNumber, 0, m_Width);
+	const int MaxX = clamp(Nx + AbsoluteRandomMagicNumber, 0, m_Width);
+
+	for(int y = CurrentY; y < MaxY; y++)
+		for(int x = CurrentX; x < MaxX; x++)
 		{
 			vec2 Pos(x * m_Spacing, y * m_Spacing);
 			vec2 Vel = m_pCells[y * m_Width + x].m_Vel * 0.01f;
@@ -90,8 +106,26 @@ void CFlow::Update()
 	if(!m_pCells)
 		return;
 
-	for(int y = 0; y < m_Height; y++)
-		for(int x = 0; x < m_Width; x++)
+	vec2 PlayerPos = GameClient()->m_LocalCharacterPos / m_Spacing;
+	vec2 ShowDistancePos;
+
+	const float ShowDistanceZoom = GameClient()->m_Camera.m_Zoom;
+
+	RenderTools()->CalcScreenParams(Graphics()->ScreenAspect(), ShowDistanceZoom, &ShowDistancePos.x, &ShowDistancePos.y);
+
+	int Nx = PlayerPos.x;
+	int Ny = PlayerPos.y;
+
+	const int ApplyDistance = distance(PlayerPos, ShowDistancePos) / m_Spacing;
+
+	const int CurrentY = clamp(Ny - ApplyDistance, 0, m_Height);
+	const int MaxY = clamp(Ny + ApplyDistance, 0, m_Height);
+
+	const int CurrentX = clamp(Nx - ApplyDistance, 0, m_Width);
+	const int MaxX = clamp(Nx + ApplyDistance, 0, m_Width);
+
+	for(int y = CurrentY; y < MaxY; y++)
+		for(int x = CurrentX; x < MaxX; x++)
 			m_pCells[y * m_Width + x].m_Vel *= 0.85f;
 }
 
@@ -113,22 +147,25 @@ void CFlow::Add(vec2 Pos, vec2 Vel, float Size)
 	if(!m_pCells)
 		return;
 
+	if(distance(Pos, GameClient()->m_LocalCharacterPos) > 640)
+		return;
+
 	int x = (int)(Pos.x / m_Spacing);
 	int y = (int)(Pos.y / m_Spacing);
 
-	int Radius = Size / m_Spacing;
+	int Diameter = Size / m_Spacing;
 
-	for(int i = -Radius / 2; i <= Radius / 2; i++)
+	for(int i = -Diameter / 2; i <= Diameter / 2; i++)
 	{
-		for(int j = -Radius / 2; j <= Radius / 2; j++)
+		for(int j = -Diameter / 2; j <= Diameter / 2; j++)
 		{
 			int Nx = x + i;
 			int Ny = y + j;
 
 			if(Nx < 0 || Ny < 0 || Nx >= m_Width || Ny >= m_Height)
 				continue;
-			
-			if(distance(vec2(x, y), vec2(Nx, Ny)) > Radius)
+
+			if(distance(vec2(x, y), vec2(Nx, Ny)) > Diameter / 2)
 				continue;
 
 			m_pCells[Ny * m_Width + Nx].m_Vel += Vel / m_Spacing;
