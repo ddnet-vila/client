@@ -914,6 +914,10 @@ private:
 	};
 
 	SMultiView m_MultiView;
+
+public:
+	// vila-client
+	bool CheckNewInput() override;
 };
 
 ColorRGBA CalculateNameColor(ColorHSLA TextColorHSL);
