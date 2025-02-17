@@ -47,31 +47,18 @@ void CFlow::DbgRender()
 	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
 
-	vec2 PlayerPos = GameClient()->m_LocalCharacterPos / m_Spacing;
-
-	int Nx = PlayerPos.x;
-	int Ny = PlayerPos.y;
-
-	const int AbsoluteRandomMagicNumber = 640 / m_Spacing;
-
-	const int CurrentY = clamp(Ny - AbsoluteRandomMagicNumber, 0, m_Height);
-	const int MaxY = clamp(Ny + AbsoluteRandomMagicNumber, 0, m_Height);
-
-	const int CurrentX = clamp(Nx - AbsoluteRandomMagicNumber, 0, m_Width);
-	const int MaxX = clamp(Nx + AbsoluteRandomMagicNumber, 0, m_Width);
-
-	for(int y = CurrentY; y < MaxY; y++)
-		for(int x = CurrentX; x < MaxX; x++)
+	auto Func = [&Array, &NumItems](CFlow *pFlow, int x, int y) {
+		vec2 Pos(x * pFlow->m_Spacing, y * pFlow->m_Spacing);
+		vec2 Vel = pFlow->m_pCells[y * pFlow->m_Width + x].m_Vel * 0.01f;
+		Array[NumItems++] = IGraphics::CLineItem(Pos.x, Pos.y, Pos.x + Vel.x, Pos.y + Vel.y);
+		if(NumItems == 1024)
 		{
-			vec2 Pos(x * m_Spacing, y * m_Spacing);
-			vec2 Vel = m_pCells[y * m_Width + x].m_Vel * 0.01f;
-			Array[NumItems++] = IGraphics::CLineItem(Pos.x, Pos.y, Pos.x + Vel.x, Pos.y + Vel.y);
-			if(NumItems == 1024)
-			{
-				Graphics()->LinesDraw(Array, 1024);
-				NumItems = 0;
-			}
+			pFlow->Graphics()->LinesDraw(Array, 1024);
+			NumItems = 0;
 		}
+	};
+
+	ApplyToFlowZone(Func);
 
 	if(NumItems)
 		Graphics()->LinesDraw(Array, NumItems);
@@ -106,27 +93,11 @@ void CFlow::Update()
 	if(!m_pCells)
 		return;
 
-	vec2 PlayerPos = GameClient()->m_LocalCharacterPos / m_Spacing;
-	vec2 ShowDistancePos;
-
-	const float ShowDistanceZoom = GameClient()->m_Camera.m_Zoom;
-
-	RenderTools()->CalcScreenParams(Graphics()->ScreenAspect(), ShowDistanceZoom, &ShowDistancePos.x, &ShowDistancePos.y);
-
-	int Nx = PlayerPos.x;
-	int Ny = PlayerPos.y;
-
-	const int ApplyDistance = distance(PlayerPos, ShowDistancePos) / m_Spacing;
-
-	const int CurrentY = clamp(Ny - ApplyDistance, 0, m_Height);
-	const int MaxY = clamp(Ny + ApplyDistance, 0, m_Height);
-
-	const int CurrentX = clamp(Nx - ApplyDistance, 0, m_Width);
-	const int MaxX = clamp(Nx + ApplyDistance, 0, m_Width);
-
-	for(int y = CurrentY; y < MaxY; y++)
-		for(int x = CurrentX; x < MaxX; x++)
-			m_pCells[y * m_Width + x].m_Vel *= 0.85f;
+	auto Func = [](CFlow *pFlow, int x, int y) {
+		pFlow->m_pCells[y * pFlow->m_Width + x].m_Vel *= 0.85f;
+	};
+	
+	ApplyToFlowZone(Func);
 }
 
 vec2 CFlow::Get(vec2 Pos)
@@ -184,4 +155,32 @@ void CFlow::SetSpacing(int Spacing)
 int CFlow::GetSpacing() const
 {
 	return m_Spacing;
+}
+
+void CFlow::ApplyToFlowZone(std::function<void(CFlow *, int, int)> &&Function)
+{
+	if(!m_pCells)
+		return;
+
+	vec2 PlayerPos = GameClient()->m_LocalCharacterPos / m_Spacing;
+	vec2 ShowDistancePos;
+
+	const float ShowDistanceZoom = GameClient()->m_Camera.m_Zoom;
+
+	RenderTools()->CalcScreenParams(Graphics()->ScreenAspect(), ShowDistanceZoom, &ShowDistancePos.x, &ShowDistancePos.y);
+
+	int Nx = PlayerPos.x;
+	int Ny = PlayerPos.y;
+
+	const int ApplyDistance = distance(PlayerPos, ShowDistancePos) / m_Spacing;
+
+	const int CurrentY = clamp(Ny - ApplyDistance, 0, m_Height);
+	const int MaxY = clamp(Ny + ApplyDistance, 0, m_Height);
+
+	const int CurrentX = clamp(Nx - ApplyDistance, 0, m_Width);
+	const int MaxX = clamp(Nx + ApplyDistance, 0, m_Width);
+
+	for(int y = CurrentY; y < MaxY; y++)
+		for(int x = CurrentX; x < MaxX; x++)
+			Function(this, x, y);
 }
