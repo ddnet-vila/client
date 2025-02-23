@@ -674,6 +674,58 @@ void CPlayers::RenderPlayer(
 				if(a < 1)
 					Recoil = std::sin(a * pi);
 				WeaponPosition = Position + Dir * g_pData->m_Weapons.m_aId[CurrentWeapon].m_Offsetx - Dir * Recoil * 10.0f;
+
+				{
+					float Strength;
+
+					switch(Player.m_Weapon)
+					{
+					case WEAPON_GUN:
+						Strength = 0.3f;
+						break;
+
+					case WEAPON_SHOTGUN:
+						Strength = 1.f;
+						break;
+
+					case WEAPON_GRENADE:
+						Strength = 0.6f;
+						break;
+					default:
+						Strength = 0.f;
+					}
+
+					const vec2 BodyOffset = -normalize(Dir * 2.f - normalize(Vel));
+					const vec2 FeetOffset = -normalize(BodyOffset + Vel) * 2.5f * !(fabs(Vel.x) < 0.1 && fabs(Vel.y) < 0.1);
+
+					CAnimKeyframe BodyKeyFrames[] = {
+						{0, 0, 0, 0.f},
+						{1, BodyOffset.x, BodyOffset.y, 0.f}};
+
+					CAnimKeyframe FeetKeyFrames[] = {
+						{0, 0, 0, 0.f},
+						{2, FeetOffset.x, FeetOffset.y, 0.f}};
+
+					const CAnimSequence BodyRecoilSeq = {
+						sizeof(BodyKeyFrames),
+						&BodyKeyFrames[0]};
+
+					const CAnimSequence FeetRecoilSeq = {
+						sizeof(FeetKeyFrames),
+						&FeetKeyFrames[0]};
+
+					const CAnimSequence NullSeq = {0, 0};
+
+					CAnimation RecoilAnimation = {
+						"body_recoil",
+						BodyRecoilSeq,
+						FeetRecoilSeq,
+						FeetRecoilSeq,
+						NullSeq};
+
+					State.Add(&RecoilAnimation, Recoil, Strength * 8.5f);
+				}
+
 				WeaponPosition.y += g_pData->m_Weapons.m_aId[CurrentWeapon].m_Offsety;
 				if(IsSit)
 					WeaponPosition.y += 3.0f;
