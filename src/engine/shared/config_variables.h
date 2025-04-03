@@ -381,6 +381,7 @@ MACRO_CONFIG_INT(BrDemoFetchInfo, br_demo_fetch_info, 0, 0, 1, CFGFLAG_SAVE | CF
 MACRO_CONFIG_INT(GhSort, gh_sort, 1, 0, 2, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Sorting column in ghost list")
 MACRO_CONFIG_INT(GhSortOrder, gh_sort_order, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Sorting order in ghost list")
 
+MACRO_CONFIG_INT(FlEnable, fl_enable, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Enable particle flow system")
 MACRO_CONFIG_INT(FlSpacing, fl_spacing, 4, 1, 64, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Particle flow spacing")
 
 MACRO_CONFIG_INT(SndBufferSize, snd_buffer_size, 512, 128, 32768, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Sound buffer size (may cause delay if large)")
