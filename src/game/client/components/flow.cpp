@@ -75,6 +75,9 @@ void CFlow::Init()
 {
 	Clear();
 
+	if(!g_Config.m_FlEnable)
+		return;
+
 	m_Spacing = g_Config.m_FlSpacing;
 
 	CMapItemLayerTilemap *pTilemap = Layers()->GameLayer();
@@ -96,7 +99,7 @@ void CFlow::Update()
 	auto Func = [](CFlow *pFlow, int x, int y) {
 		pFlow->m_pCells[y * pFlow->m_Width + x].m_Vel *= 0.85f;
 	};
-	
+
 	ApplyToFlowZone(Func);
 }
 
