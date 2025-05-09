@@ -17,3 +17,8 @@
 extern const char *GIT_SHORTREV_HASH;
 #define GAME_NAME "DDNet"
 #endif
+
+// vila
+#define VILA_BUILD_DATE __DATE__ ", " __TIME__
+#define VILA_VERSION "0.0.1a"
+#define VILA_VERSION_NUMBER 1
