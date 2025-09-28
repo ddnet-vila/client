@@ -50,5 +50,13 @@ private:
 	static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData);
 	static void ConKeyInputSet(IConsole::IResult *pResult, void *pUserData);
 	static void ConKeyInputNextPrevWeapon(IConsole::IResult *pResult, void *pUserData);
+
+
+	// ddnet-vila
+
+public:
+	CNetObj_PlayerInput m_InstantInput;
+	
+	bool CheckNewInput();
 };
 #endif

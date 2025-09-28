@@ -2797,6 +2797,11 @@ void CClient::Update()
 					// send input
 					SendInput();
 				}
+
+				if(g_Config.m_ClPredictInstantApply && GameClient()->CheckNewInput())
+				{
+					Repredict = true;
+				}
 			}
 
 			// only do sane predictions

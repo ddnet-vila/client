@@ -398,6 +398,10 @@ public:
 	virtual void ProcessDemoSnapshot(class CSnapshot *pSnap) = 0;
 
 	virtual void InitializeLanguage() = 0;
+
+	// ddnet-vila
+
+	virtual bool CheckNewInput() = 0;
 };
 
 extern IGameClient *CreateGameClient();
