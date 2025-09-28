@@ -42,5 +42,11 @@ public:
 	int SnapInput(int *pData);
 	void ClampMousePos();
 	void ResetInput(int Dummy);
+
+	// ddnet-vila
+
+	CNetObj_PlayerInput m_InstantInput;
+	
+	bool CheckNewInput();
 };
 #endif
