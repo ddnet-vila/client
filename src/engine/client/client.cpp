@@ -206,6 +206,9 @@ int CClient::SendMsgActive(CMsgPacker *pMsg, int Flags)
 
 void CClient::SendInfo(int Conn)
 {
+	// ddnet-vila
+	SendVila(Conn);
+
 	CMsgPacker MsgVer(NETMSG_CLIENTVER, true);
 	MsgVer.AddRaw(&m_ConnectionId, sizeof(m_ConnectionId));
 	MsgVer.AddInt(GameClient()->DDNetVersion());
@@ -5332,3 +5335,21 @@ void CClient::SetLoggers(std::shared_ptr<ILogger> &&pFileLogger, std::shared_ptr
 	m_pFileLogger = pFileLogger;
 	m_pStdoutLogger = pStdoutLogger;
 }
+
+
+// ddnet-vila
+void CClient::SendVila(int Conn)
+{
+	CMsgPacker Msg(NETMSG_IAMVILA, true);
+	Msg.AddInt(VILA_VERSION_NUMBER);
+	char aBuf[2048];
+	str_format(aBuf, sizeof(aBuf),
+		"vila %s (DDNet %s, built on %s, git rev %s)",
+		VILA_VERSION,
+		GAME_VERSION,
+		VILA_BUILD_DATE,
+		GIT_SHORTREV_HASH);
+	Msg.AddString(aBuf, 0);
+	SendMsg(Conn, &Msg, MSGFLAG_VITAL);
+}
+
