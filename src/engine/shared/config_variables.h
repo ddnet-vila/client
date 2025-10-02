@@ -781,3 +781,7 @@ MACRO_CONFIG_INT(ClVideoRecorderFPS, cl_video_recorder_fps, 60, 1, 1000, CFGFLAG
 /*
  * Add config variables for mods below this comment to avoid merge conflicts.
  */
+
+ // ddnet-vila
+ 
+ MACRO_CONFIG_INT(ClPredictInstantApply, cl_predict_instant_apply, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply input instantly to prediction")

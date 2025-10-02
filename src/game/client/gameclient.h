@@ -929,6 +929,11 @@ private:
 	};
 
 	SMultiView m_MultiView;
+
+	// ddnet-vila
+
+public:
+	bool CheckNewInput() override;
 };
 
 ColorRGBA CalculateNameColor(ColorHSLA TextColorHSL);
