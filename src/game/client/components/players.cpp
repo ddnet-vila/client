@@ -48,6 +48,12 @@ static vec2 CalculateHandPosition(vec2 CenterPos, vec2 Dir, vec2 PostRotOffset)
 	return CenterPos + Dir + Dir * PostRotOffset.x + DirY * PostRotOffset.y;
 }
 
+// ddnet-vila
+
+static CAnimation CalculateBodyRecoilAnimation(int, vec2, vec2, float, float *);
+
+//
+
 void CPlayers::RenderHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset, float Alpha)
 {
 	const vec2 HandPos = CalculateHandPosition(CenterPos, Dir, PostRotOffset);
@@ -663,6 +669,10 @@ void CPlayers::RenderPlayer(
 				if(a < 1.0f)
 					Recoil = std::sin(a * pi);
 				WeaponPosition = Position + Direction * g_pData->m_Weapons.m_aId[CurrentWeapon].m_Offsetx - Direction * Recoil * 10.0f;
+				float Strength;
+				CAnimation RecoilAnimation = CalculateBodyRecoilAnimation(Player.m_Weapon, Direction, Vel, Recoil, &Strength);
+				State.Add(&RecoilAnimation, Recoil, Strength * 8.5f);
+				WeaponPosition = Position + Direction * g_pData->m_Weapons.m_aId[CurrentWeapon].m_Offsetx - Direction * Recoil * 10.0f;
 				WeaponPosition.y += g_pData->m_Weapons.m_aId[CurrentWeapon].m_Offsety;
 				if(IsSit)
 					WeaponPosition.y += 3.0f;
@@ -1043,4 +1053,57 @@ void CPlayers::OnInit()
 
 	CreateNinjaTeeRenderInfo();
 	CreateSpectatorTeeRenderInfo();
+}
+
+// ddnet-vila
+
+static CAnimation CalculateBodyRecoilAnimation(int Weapon, vec2 Direction, vec2 Velocity, float Recoil, float *Strength)
+{
+	switch(Weapon)
+	{
+	case WEAPON_GUN:
+		*Strength = 0.3f;
+		break;
+
+	case WEAPON_SHOTGUN:
+		*Strength = 1.f;
+		break;
+
+	case WEAPON_GRENADE:
+		*Strength = 0.6f;
+		break;
+
+	default:
+		*Strength = 0.f;
+	}
+
+	const vec2 BodyOffset = -normalize(Direction * 2.f - normalize(Velocity));
+	const vec2 FeetOffset = -normalize(BodyOffset + Velocity) * 2.5f * !(fabs(Velocity.x) < 0.1 && fabs(Velocity.y) < 0.1);
+
+	CAnimKeyframe BodyKeyFrames[] = {
+		{0, 0, 0, 0.f},
+		{1, BodyOffset.x, BodyOffset.y, 0.f}};
+
+	CAnimKeyframe FeetKeyFrames[] = {
+		{0, 0, 0, 0.f},
+		{2, FeetOffset.x, FeetOffset.y, 0.f}};
+
+	const CAnimSequence BodyRecoilSeq = {
+		sizeof(BodyKeyFrames),
+		&BodyKeyFrames[0]};
+
+	const CAnimSequence FeetRecoilSeq = {
+		sizeof(FeetKeyFrames),
+		&FeetKeyFrames[0]};
+
+	const CAnimSequence NullSeq = {0, 0};
+
+	CAnimation RecoilAnimation = {
+		"body_recoil",
+		BodyRecoilSeq,
+		FeetRecoilSeq,
+		FeetRecoilSeq,
+		NullSeq};
+		
+	return RecoilAnimation;
 }
