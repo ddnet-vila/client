@@ -969,7 +969,7 @@ void CScoreboard::OnRenderEx()
 		Title.Draw(ColorRGBA(107, 255, 107, 127).Multiply(1.0f / 255.0f), IGraphics::CORNER_ALL, Rounding);
 		RenderTitleEx(Title, TEAM_RED, pTitle, aTeamSize[TEAM_RED]);
 
-		RenderMultiBoard(Scoreboard, TEAM_RED, NumPlayers, RenderState);
+		Scoreboard.h = RenderMultiBoard(Scoreboard, TEAM_RED, NumPlayers, RenderState);
 	}
 
 	if(pGameInfoObj && (pGameInfoObj->m_ScoreLimit || pGameInfoObj->m_TimeLimit || (pGameInfoObj->m_RoundNum && pGameInfoObj->m_RoundCurrent)))
