@@ -173,7 +173,12 @@ private:
 
 	// ddnet-vila
 
+	void OnRenderEx();
 	void RenderSpectatorHudEx();
+
+	void RenderDefaultScoreHud();
+	void RenderTeamScoreHud();
+	void RenderStatBars();
 };
 
 #endif

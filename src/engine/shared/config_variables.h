@@ -791,4 +791,5 @@ MACRO_CONFIG_INT(ClVideoRecorderFPS, cl_video_recorder_fps, 60, 1, 1000, CFGFLAG
  MACRO_CONFIG_INT(ClAnimSkid, cl_anim_skid, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God skid animations")
  MACRO_CONFIG_INT(ClAnimRun, cl_anim_run, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Hecta run animations")
  MACRO_CONFIG_INT(ClAnimRecoil, cl_anim_recoil, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use recoil animations")
+ MACRO_CONFIG_INT(ClHudStatbars, cl_hud_statbars, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable spectator statbars")
 
