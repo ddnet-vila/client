@@ -118,6 +118,11 @@ void CHud::OnInit()
 
 void CHud::RenderGameTimer()
 {
+	// ddnet-vila
+	RenderGameTimerEx();
+	return;
+	//
+	
 	float Half = m_Width / 2.0f;
 
 	if(!(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_SUDDENDEATH))
@@ -640,6 +645,11 @@ void CHud::RenderCursor()
 
 void CHud::PrepareAmmoHealthAndArmorQuads()
 {
+	// ddnet-vila
+	PrepareAmmoHealthAndArmorQuadsEx();
+	return;
+	//
+	
 	float x = 5;
 	float y = 5;
 	IGraphics::CQuadItem Array[10];
@@ -712,6 +722,11 @@ void CHud::PrepareAmmoHealthAndArmorQuads()
 
 void CHud::RenderAmmoHealthAndArmor(const CNetObj_Character *pCharacter)
 {
+	// ddnet-vila
+	RenderAmmoHealthAndArmorEx(pCharacter);
+	return;
+	//
+
 	if(!pCharacter)
 		return;
 
@@ -2489,5 +2504,308 @@ void CHud::RenderStatBars()
 				}
 			}
 		}
+	}
+}
+
+void CHud::PrepareAmmoHealthAndArmorQuadsEx()
+{
+	if(g_Config.m_ClHudZHealthbar)
+		PrepareAmmoHealthAndArmorQuadsNew();
+	else
+		PrepareAmmoHealthAndArmorQuadsOld();
+}
+
+void CHud::PrepareAmmoHealthAndArmorQuadsOld()
+{
+	float x = 5;
+	float y = 5;
+	IGraphics::CQuadItem Array[10];
+
+	// ammo of the different weapons
+	for(int i = 0; i < NUM_WEAPONS; ++i)
+	{
+		// 0.6
+		for(int n = 0; n < 10; n++)
+			Array[n] = IGraphics::CQuadItem(x + n * 12, y, 10, 10);
+
+		m_aAmmoOffset[i] = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+		// 0.7
+		if(i == WEAPON_GRENADE)
+		{
+			// special case for 0.7 grenade
+			for(int n = 0; n < 10; n++)
+				Array[n] = IGraphics::CQuadItem(1 + x + n * 12, y, 10, 10);
+		}
+		else
+		{
+			for(int n = 0; n < 10; n++)
+				Array[n] = IGraphics::CQuadItem(x + n * 12, y, 12, 12);
+		}
+
+		Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+	}
+
+	// health
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 10, 10);
+	m_HealthOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// empty health
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 10, 10);
+	m_EmptyHealthOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// armor meter
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 10, 10);
+	m_ArmorOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// empty armor meter
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 10, 10);
+	m_EmptyArmorOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+}
+
+void CHud::PrepareAmmoHealthAndArmorQuadsNew()
+{
+	float x = 48;
+	float y = 5;
+	IGraphics::CQuadItem Array[10];
+
+	// ammo of the different weapons
+	for(int i = 0; i < NUM_WEAPONS; ++i)
+	{
+		// 0.6
+		for(int n = 0; n < 10; n++)
+			if(n < 5)
+				Array[n] = IGraphics::CQuadItem(-x - n * 12, y, 10, 10);
+			else
+				Array[n] = IGraphics::CQuadItem(x + (n - 5) * 12, y, 10, 10);
+
+		m_aAmmoOffset[i] = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+		// 0.7
+		if(i == WEAPON_GRENADE)
+		{
+			// special case for 0.7 grenade
+			for(int n = 0; n < 10; n++)
+				Array[n] = IGraphics::CQuadItem(1 + x + n * 12, y, 10, 10);
+		}
+		else
+		{
+			for(int n = 0; n < 10; n++)
+				Array[n] = IGraphics::CQuadItem(x + n * 12, y, 12, 12);
+		}
+
+		Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+	}
+
+	// health
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(-x - i * 12, y, 10, 10);
+	m_HealthOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(-x - i * 12, y, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// empty health
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(-x - i * 12, y, 10, 10);
+	m_EmptyHealthOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(-x - i * 12, y, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// armor meter
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 10, 10);
+	m_ArmorOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// empty armor meter
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 10, 10);
+	m_EmptyArmorOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+
+	// 0.7
+	for(int i = 0; i < 10; ++i)
+		Array[i] = IGraphics::CQuadItem(x + i * 12, y, 12, 12);
+	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+}
+
+void CHud::RenderAmmoHealthAndArmorEx(const CNetObj_Character *pCharacter)
+{
+	if(g_Config.m_ClHudZHealthbar)
+		RenderAmmoHealthAndArmorNew(pCharacter);
+	else
+		RenderAmmoHealthAndArmorOld(pCharacter);
+}
+
+void CHud::RenderAmmoHealthAndArmorOld(const CNetObj_Character *pCharacter)
+{
+	if(!pCharacter)
+		return;
+
+	bool IsSixupGameSkin = GameClient()->m_GameSkin.IsSixup();
+	int QuadOffsetSixup = (IsSixupGameSkin ? 10 : 0);
+
+	if(GameClient()->m_GameInfo.m_HudAmmo)
+	{
+		// ammo display
+		float AmmoOffsetY = GameClient()->m_GameInfo.m_HudHealthArmor ? 24 : 0;
+		int CurWeapon = pCharacter->m_Weapon % NUM_WEAPONS;
+		// 0.7 only
+		if(CurWeapon == WEAPON_NINJA)
+		{
+			if(!GameClient()->m_GameInfo.m_HudDDRace && Client()->IsSixup())
+			{
+				const int Max = g_pData->m_Weapons.m_Ninja.m_Duration * Client()->GameTickSpeed() / 1000;
+				float NinjaProgress = std::clamp(pCharacter->m_AmmoCount - Client()->GameTick(g_Config.m_ClDummy), 0, Max) / (float)Max;
+				RenderNinjaBarPos(5 + 10 * 12, 5, 6.f, 24.f, NinjaProgress);
+			}
+		}
+		else if(CurWeapon >= 0 && GameClient()->m_GameSkin.m_aSpriteWeaponProjectiles[CurWeapon].IsValid())
+		{
+			Graphics()->TextureSet(GameClient()->m_GameSkin.m_aSpriteWeaponProjectiles[CurWeapon]);
+			if(AmmoOffsetY > 0)
+			{
+				Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, std::clamp(pCharacter->m_AmmoCount, 0, 10), 0, AmmoOffsetY);
+			}
+			else
+			{
+				Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, std::clamp(pCharacter->m_AmmoCount, 0, 10));
+			}
+		}
+	}
+
+	if(GameClient()->m_GameInfo.m_HudHealthArmor)
+	{
+		// health display
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHealthFull);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_HealthOffset + QuadOffsetSixup, minimum(pCharacter->m_Health, 10));
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHealthEmpty);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_EmptyHealthOffset + QuadOffsetSixup + minimum(pCharacter->m_Health, 10), 10 - minimum(pCharacter->m_Health, 10));
+
+		// armor display
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteArmorFull);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_ArmorOffset + QuadOffsetSixup, minimum(pCharacter->m_Armor, 10));
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteArmorEmpty);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_ArmorOffset + QuadOffsetSixup + minimum(pCharacter->m_Armor, 10), 10 - minimum(pCharacter->m_Armor, 10));
+	}
+}
+
+void CHud::RenderAmmoHealthAndArmorNew(const CNetObj_Character *pCharacter)
+{
+	if(!pCharacter)
+		return;
+
+	bool IsSixupGameSkin = GameClient()->m_GameSkin.IsSixup();
+	int QuadOffsetSixup = (IsSixupGameSkin ? 10 : 0);
+
+	if(GameClient()->m_GameInfo.m_HudAmmo)
+	{
+		// ammo display
+		int CurWeapon = pCharacter->m_Weapon % NUM_WEAPONS;
+		// 0.7 only
+		if(CurWeapon == WEAPON_NINJA)
+		{
+			if(!GameClient()->m_GameInfo.m_HudDDRace && Client()->IsSixup())
+			{
+				const int Max = g_pData->m_Weapons.m_Ninja.m_Duration * Client()->GameTickSpeed() / 1000;
+				float NinjaProgress = std::clamp(pCharacter->m_AmmoCount - Client()->GameTick(g_Config.m_ClDummy), 0, Max) / (float)Max;
+				RenderNinjaBarPos(5 + 10 * 12, 5, 6.f, 24.f, NinjaProgress);
+			}
+		}
+		else if(CurWeapon >= 0 && GameClient()->m_GameSkin.m_aSpriteWeaponProjectiles[CurWeapon].IsValid())
+		{
+			Graphics()->TextureSet(GameClient()->m_GameSkin.m_aSpriteWeaponProjectiles[CurWeapon]);
+			Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, minimum(pCharacter->m_AmmoCount, 10), m_Width / 2 - 5, 14);
+		}
+	}
+
+	if(GameClient()->m_GameInfo.m_HudHealthArmor)
+	{
+		// health display
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHealthFull);
+		Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_HealthOffset, minimum(pCharacter->m_Health, 10), m_Width / 2 - 6, 2); // - 60
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHealthEmpty);
+		Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_EmptyHealthOffset + minimum(pCharacter->m_Health, 10), 10 - minimum(pCharacter->m_Health, 10), m_Width / 2 - 5, 2);
+
+		// armor display
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteArmorFull);
+		Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_ArmorOffset, minimum(pCharacter->m_Armor, 10), m_Width / 2 - 5, 2); // 48
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteArmorEmpty);
+		Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_ArmorOffset + minimum(pCharacter->m_Armor, 10), 10 - minimum(pCharacter->m_Armor, 10), m_Width / 2 - 5, 2);
+	}
+}
+
+void CHud::RenderGameTimerEx()
+{
+	float Half = m_Width / 2.0f;
+
+	if(!(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_SUDDENDEATH))
+	{
+		char aBuf[32];
+		int Time = 0;
+		if(GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit && (GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer <= 0))
+		{
+			Time = GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit * 60 - ((Client()->GameTick(g_Config.m_ClDummy) - GameClient()->m_Snap.m_pGameInfoObj->m_RoundStartTick) / Client()->GameTickSpeed());
+
+			if(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER)
+				Time = 0;
+		}
+		else if(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_RACETIME)
+		{
+			// The Warmup timer is negative in this case to make sure that incompatible clients will not see a warmup timer
+			Time = (Client()->GameTick(g_Config.m_ClDummy) + GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer) / Client()->GameTickSpeed();
+		}
+		else
+			Time = (Client()->GameTick(g_Config.m_ClDummy) - GameClient()->m_Snap.m_pGameInfoObj->m_RoundStartTick) / Client()->GameTickSpeed();
+
+		str_time((int64_t)Time * 100, TIME_DAYS, aBuf, sizeof(aBuf));
+		float FontSize = 10.0f;
+		static float s_TextWidthM = TextRender()->TextWidth(FontSize, "00:00", -1, -1.0f);
+		static float s_TextWidthH = TextRender()->TextWidth(FontSize, "00:00:00", -1, -1.0f);
+		static float s_TextWidth0D = TextRender()->TextWidth(FontSize, "0d 00:00:00", -1, -1.0f);
+		static float s_TextWidth00D = TextRender()->TextWidth(FontSize, "00d 00:00:00", -1, -1.0f);
+		static float s_TextWidth000D = TextRender()->TextWidth(FontSize, "000d 00:00:00", -1, -1.0f);
+		float w = Time >= 3600 * 24 * 100 ? s_TextWidth000D : Time >= 3600 * 24 * 10 ? s_TextWidth00D : Time >= 3600 * 24 ? s_TextWidth0D : Time >= 3600 ? s_TextWidthH : s_TextWidthM;
+		// last 60 sec red, last 10 sec blink
+		if(GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit && Time <= 60 && (GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer <= 0))
+		{
+			float Alpha = Time <= 10 && (2 * time() / time_freq()) % 2 ? 0.5f : 1.0f;
+			TextRender()->TextColor(1.0f, 0.25f, 0.25f, Alpha);
+		}
+		TextRender()->Text(Half - w / 2, 5, FontSize, aBuf, -1.0f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }

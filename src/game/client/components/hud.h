@@ -179,6 +179,16 @@ private:
 	void RenderDefaultScoreHud();
 	void RenderTeamScoreHud();
 	void RenderStatBars();
+
+	void PrepareAmmoHealthAndArmorQuadsEx();
+	void PrepareAmmoHealthAndArmorQuadsOld();
+	void PrepareAmmoHealthAndArmorQuadsNew();
+
+	void RenderAmmoHealthAndArmorEx(const CNetObj_Character *pCharacter);
+	void RenderAmmoHealthAndArmorOld(const CNetObj_Character *pCharacter);
+	void RenderAmmoHealthAndArmorNew(const CNetObj_Character *pCharacter);
+
+	void RenderGameTimerEx();
 };
 
 #endif
