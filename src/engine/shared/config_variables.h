@@ -785,3 +785,8 @@ MACRO_CONFIG_INT(ClVideoRecorderFPS, cl_video_recorder_fps, 60, 1, 1000, CFGFLAG
  // ddnet-vila
  
  MACRO_CONFIG_INT(ClPredictInstantApply, cl_predict_instant_apply, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply input instantly to prediction")
+ MACRO_CONFIG_INT(ClAnimIdle, cl_anim_idle, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God idle animations")
+ MACRO_CONFIG_INT(ClAnimInair, cl_anim_inair, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God inair animations")
+ MACRO_CONFIG_INT(ClAnimWalk, cl_anim_walk, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God walk animations")
+ MACRO_CONFIG_INT(ClAnimSkid, cl_anim_skid, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God skid animations")
+ MACRO_CONFIG_INT(ClAnimRun, cl_anim_run, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Hecta run animations")

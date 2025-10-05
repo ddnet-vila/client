@@ -1163,42 +1163,80 @@ void CPlayers::RenderPlayerEx(
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y + 16);
-	bool Running = Player.m_VelX >= 5000 || Player.m_VelX <= -5000;
+	bool Running = g_Config.m_ClAnimRun && (Player.m_VelX >= 5000 || Player.m_VelX <= -5000);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 	bool Inactive = ClientId >= 0 && (GameClient()->m_aClients[ClientId].m_Afk || GameClient()->m_aClients[ClientId].m_Paused);
+	bool LookDir = Direction.x < 0;
+	bool WalkDir = Vel.x < 0;
 
 	// evaluate animation
 	float WalkTime = std::fmod(Position.x, 100.0f) / 100.0f;
 	float RunTime = std::fmod(Position.x, 200.0f) / 200.0f;
 
 	// Don't do a moon walk outside the left border
-	if(WalkTime < 0.0f)
-		WalkTime += 1.0f;
-	if(RunTime < 0.0f)
-		RunTime += 1.0f;
+	if(WalkTime < 0)
+		WalkTime += 1;
+	if(RunTime < 0)
+		RunTime += 1;
 
 	CAnimState State;
-	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0.0f);
+	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
+	float Time = 0.0f;
+	int NowAnimation = 0;
 
 	if(InAir)
-		State.Add(&g_pData->m_aAnimations[ANIM_INAIR], 0.0f, 1.0f); // TODO: some sort of time here
+	{
+		if(g_Config.m_ClAnimInair)
+		{
+			if(Vel.y <= 0)
+				NowAnimation = WalkDir ? ANIM_IDLE_INAIR_LEFT : ANIM_IDLE_INAIR_RIGHT;
+			else
+				NowAnimation = WalkDir ? ANIM_INAIR_LEFT : ANIM_INAIR_RIGHT;
+
+			Time = WalkTime;
+		}
+		else
+			NowAnimation = ANIM_INAIR;
+	}
 	else if(Stationary)
 	{
 		if(Inactive)
 		{
-			State.Add(Direction.x < 0.0f ? &g_pData->m_aAnimations[ANIM_SIT_LEFT] : &g_pData->m_aAnimations[ANIM_SIT_RIGHT], 0.0f, 1.0f); // TODO: some sort of time here
+			NowAnimation = LookDir ? ANIM_SIT_LEFT : ANIM_SIT_RIGHT;
 			RenderInfo.m_FeetFlipped = true;
 		}
 		else
-			State.Add(&g_pData->m_aAnimations[ANIM_IDLE], 0.0f, 1.0f); // TODO: some sort of time here
+		{
+			if(g_Config.m_ClAnimIdle)
+				NowAnimation = LookDir ? ANIM_IDLE_LEFT : ANIM_IDLE_RIGHT;
+			else
+				NowAnimation = ANIM_IDLE;
+		}
 	}
 	else if(!WantOtherDir)
 	{
-		if(Running)
-			State.Add(Player.m_VelX < 0 ? &g_pData->m_aAnimations[ANIM_RUN_LEFT] : &g_pData->m_aAnimations[ANIM_RUN_RIGHT], RunTime, 1.0f);
+		if(!Running)
+		{
+			if(g_Config.m_ClAnimWalk)
+				NowAnimation = WalkDir ? ANIM_WALK_LEFT : ANIM_WALK_RIGHT;
+			else
+				NowAnimation = ANIM_WALK;
+
+			Time = WalkTime;
+		}
 		else
-			State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
+		{
+			NowAnimation = WalkDir ? ANIM_RUN_LEFT : ANIM_RUN_RIGHT;
+			Time = RunTime;
+		}
 	}
+	else if(g_Config.m_ClAnimSkid && WantOtherDir)
+	{
+		NowAnimation = WalkDir ? ANIM_SKID_LEFT : ANIM_SKID_RIGHT;
+		Time = WalkTime;
+	}
+
+	State.Add(&g_pData->m_aAnimations[NowAnimation], Time, 1.0f);
 
 	if(Player.m_Weapon == WEAPON_HAMMER)
 		State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], std::clamp(LastAttackTime * 5.0f, 0.0f, 1.0f), 1.0f);
