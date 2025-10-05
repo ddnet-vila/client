@@ -1044,7 +1044,7 @@ void CScoreboard::RenderGoalsEx(CUIRect Goals, float LineHeight)
 		TextWidth = TextRender()->TextWidth(FontSize, aBuf, -1);
 		TextRender()->Text(LeftX, Goals.y, FontSize, aBuf, -1);
 		if (GameClient()->m_Snap.m_pGameInfoObj->m_ScoreLimit == 0) {
-			str_format(aBuf, sizeof(aBuf), "-");
+			str_copy(aBuf, "-");
 		} else {
 			TextRender()->TextColor(0.5f,1,0.5f,1);
 			str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_Snap.m_pGameInfoObj->m_ScoreLimit);
@@ -1057,7 +1057,7 @@ void CScoreboard::RenderGoalsEx(CUIRect Goals, float LineHeight)
 		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
 		TextRender()->Text(CenterX-70, Goals.y, FontSize, aBuf, -1);
 		if (GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit == 0) {
-			str_format(aBuf, sizeof(aBuf), "-");
+			str_copy(aBuf, "-");
 			TextRender()->Text(CenterX-70+TextWidth, Goals.y, FontSize, aBuf, -1);
 		} else {
 			str_format(aBuf, sizeof(aBuf), "%d %s", GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit, Localize("min"));

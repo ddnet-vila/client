@@ -1912,7 +1912,7 @@ void CHud::RenderRecord()
 
 // ddnet-vila
 
-const float s_DefaultHudBoxHeight = 16.0f;
+// const float s_DefaultHudBoxHeight = 16.0f;
 const float s_DefaultFontSize = 10.0f;
 
 const ColorRGBA s_TeamColor[2] = {{0.975f, 0.17f, 0.17f, 0.3f}, {0.17f, 0.46f, 0.975f, 0.3f}};
