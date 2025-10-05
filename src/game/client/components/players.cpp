@@ -1361,9 +1361,14 @@ void CPlayers::RenderPlayerEx(
 				if(a < 1.0f)
 					Recoil = std::sin(a * pi);
 				WeaponPosition = Position + Direction * g_pData->m_Weapons.m_aId[CurrentWeapon].m_Offsetx - Direction * Recoil * 10.0f;
-				float Strength;
-				CAnimation RecoilAnimation = CalculateBodyRecoilAnimation(Player.m_Weapon, Direction, Vel, Recoil, &Strength);
-				State.Add(&RecoilAnimation, Recoil,  Strength * 8.0f);
+
+				if(g_Config.m_ClAnimRecoil)
+				{
+					float Strength;
+					CAnimation RecoilAnimation = CalculateBodyRecoilAnimation(Player.m_Weapon, Direction, Vel, Recoil, &Strength);
+					State.Add(&RecoilAnimation, Recoil,  Strength * 8.0f);
+				}
+				
 				WeaponPosition = Position + Direction * g_pData->m_Weapons.m_aId[CurrentWeapon].m_Offsetx - Direction * Recoil * 10.0f;
 				WeaponPosition.y += g_pData->m_Weapons.m_aId[CurrentWeapon].m_Offsety;
 				if(IsSit)
