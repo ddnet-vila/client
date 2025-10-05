@@ -122,7 +122,7 @@ void CHud::RenderGameTimer()
 	RenderGameTimerEx();
 	return;
 	//
-	
+
 	float Half = m_Width / 2.0f;
 
 	if(!(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_SUDDENDEATH))
@@ -649,7 +649,7 @@ void CHud::PrepareAmmoHealthAndArmorQuads()
 	PrepareAmmoHealthAndArmorQuadsEx();
 	return;
 	//
-	
+
 	float x = 5;
 	float y = 5;
 	IGraphics::CQuadItem Array[10];
@@ -1919,7 +1919,6 @@ const ColorRGBA s_TeamColor[2] = {{0.975f, 0.17f, 0.17f, 0.3f}, {0.17f, 0.46f, 0
 
 void CHud::OnRenderEx()
 {
-
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 

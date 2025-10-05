@@ -540,7 +540,6 @@ public:
 	void GetGpuInfoString(char (&aGpuInfo)[512]) override;
 	void SetLoggers(std::shared_ptr<ILogger> &&pFileLogger, std::shared_ptr<ILogger> &&pStdoutLogger);
 
-
 	// ddnet-vila
 	void SendVila(int Conn);
 };

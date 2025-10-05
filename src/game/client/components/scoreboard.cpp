@@ -887,7 +887,7 @@ void CScoreboard::OnRenderEx()
 	const float ScoreboardWidth = !Teams && NumPlayers <= 16 ? ScoreboardSmallWidth : 1500.0f;
 	const float TitleHeight = 60.0f;
 	const float Rounding = ScoreboardRounding();
-	
+
 	CUIRect Scoreboard = {(Width - ScoreboardWidth) / 2.0f, 150.0f, ScoreboardWidth, 710.0f + TitleHeight};
 	CScoreboardRenderState RenderState{};
 
@@ -1015,9 +1015,9 @@ void CScoreboard::RenderGoalsEx(CUIRect Goals, float LineHeight)
 	Goals.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_T, Rounding);
 	Goals.Margin(Rounding, &Goals);
 
-	float LeftX = Goals.x+10.0f;
-	float RightX = Goals.x+Goals.w-35;
-	float CenterX = (LeftX+RightX)/2;
+	float LeftX = Goals.x + 10.0f;
+	float RightX = Goals.x + Goals.w - 35;
+	float CenterX = (LeftX + RightX) / 2;
 
 	// init
 	float TextWidth = 0.0f;
@@ -1028,11 +1028,11 @@ void CScoreboard::RenderGoalsEx(CUIRect Goals, float LineHeight)
 	Client()->GetServerInfo(&CurrentServerInfo);
 
 	float FontSizeResize = FontSize;
-	while(TextRender()->TextWidth(FontSizeResize, CurrentServerInfo.m_aName, -1) > Goals.w-20)
+	while(TextRender()->TextWidth(FontSizeResize, CurrentServerInfo.m_aName, -1) > Goals.w - 20)
 		--FontSizeResize;
 	TextWidth = TextRender()->TextWidth(FontSizeResize, CurrentServerInfo.m_aName, -1);
-	TextRender()->TextColor(0.8f,0.8f,0.8f,1);
-	TextRender()->Text(CenterX-TextWidth/2, Goals.y+(FontSize-FontSizeResize)/2, FontSizeResize, CurrentServerInfo.m_aName, -1);
+	TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1);
+	TextRender()->Text(CenterX - TextWidth / 2, Goals.y + (FontSize - FontSizeResize) / 2, FontSizeResize, CurrentServerInfo.m_aName, -1);
 
 	Goals.HSplitTop(LineHeight + Rounding / 2, nullptr, &Goals);
 
@@ -1043,39 +1043,48 @@ void CScoreboard::RenderGoalsEx(CUIRect Goals, float LineHeight)
 		str_format(aBuf, sizeof(aBuf), "%s: ", Localize("Score limit"));
 		TextWidth = TextRender()->TextWidth(FontSize, aBuf, -1);
 		TextRender()->Text(LeftX, Goals.y, FontSize, aBuf, -1);
-		if (GameClient()->m_Snap.m_pGameInfoObj->m_ScoreLimit == 0) {
+		if(GameClient()->m_Snap.m_pGameInfoObj->m_ScoreLimit == 0)
+		{
 			str_copy(aBuf, "-");
-		} else {
-			TextRender()->TextColor(0.5f,1,0.5f,1);
+		}
+		else
+		{
+			TextRender()->TextColor(0.5f, 1, 0.5f, 1);
 			str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_Snap.m_pGameInfoObj->m_ScoreLimit);
 		}
-		TextRender()->Text(LeftX+TextWidth, Goals.y, FontSize, aBuf, -1);
+		TextRender()->Text(LeftX + TextWidth, Goals.y, FontSize, aBuf, -1);
 
 		// render time limit
 		str_format(aBuf, sizeof(aBuf), "%s: ", Localize("Time limit"));
 		TextWidth = TextRender()->TextWidth(FontSize, aBuf, -1);
-		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
-		TextRender()->Text(CenterX-70, Goals.y, FontSize, aBuf, -1);
-		if (GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit == 0) {
+		TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1);
+		TextRender()->Text(CenterX - 70, Goals.y, FontSize, aBuf, -1);
+		if(GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit == 0)
+		{
 			str_copy(aBuf, "-");
-			TextRender()->Text(CenterX-70+TextWidth, Goals.y, FontSize, aBuf, -1);
-		} else {
+			TextRender()->Text(CenterX - 70 + TextWidth, Goals.y, FontSize, aBuf, -1);
+		}
+		else
+		{
 			str_format(aBuf, sizeof(aBuf), "%d %s", GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit, Localize("min"));
-			TextRender()->Text(CenterX-70+TextWidth, Goals.y, FontSize, aBuf, -1);
-			TextRender()->TextColor(0.5f,1,0.5f,1);
+			TextRender()->Text(CenterX - 70 + TextWidth, Goals.y, FontSize, aBuf, -1);
+			TextRender()->TextColor(0.5f, 1, 0.5f, 1);
 			str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_Snap.m_pGameInfoObj->m_TimeLimit);
-			TextRender()->Text(CenterX-70+TextWidth, Goals.y, FontSize, aBuf, -1);
+			TextRender()->Text(CenterX - 70 + TextWidth, Goals.y, FontSize, aBuf, -1);
 		}
 
 		// render rounds
-		if (GameClient()->m_Snap.m_pGameInfoObj->m_RoundNum == 0) {
+		if(GameClient()->m_Snap.m_pGameInfoObj->m_RoundNum == 0)
+		{
 			str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Round"), GameClient()->m_Snap.m_pGameInfoObj->m_RoundCurrent);
-		} else {
+		}
+		else
+		{
 			str_format(aBuf, sizeof(aBuf), "%s: %d/%d", Localize("Round"), GameClient()->m_Snap.m_pGameInfoObj->m_RoundCurrent, GameClient()->m_Snap.m_pGameInfoObj->m_RoundNum);
 		}
 		TextWidth = TextRender()->TextWidth(FontSize, aBuf, -1);
-		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
-		TextRender()->Text(RightX-TextWidth, Goals.y, FontSize, aBuf, -1);
+		TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1);
+		TextRender()->Text(RightX - TextWidth, Goals.y, FontSize, aBuf, -1);
 	}
 
 	Goals.HSplitTop(LineHeight + Rounding / 2, nullptr, &Goals);
@@ -1085,32 +1094,33 @@ void CScoreboard::RenderGoalsEx(CUIRect Goals, float LineHeight)
 	{
 		// render game type
 		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Game type"), CurrentServerInfo.m_aGameType);
-		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
+		TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1);
 		TextRender()->Text(LeftX, Goals.y, FontSize, aBuf, -1);
 
 		// render players
 		str_format(aBuf, sizeof(aBuf), "%s: ", Localize("Players"));
 		TextWidth = TextRender()->TextWidth(FontSize, aBuf, -1);
-		TextRender()->Text(CenterX-70, Goals.y, FontSize, aBuf, -1);
+		TextRender()->Text(CenterX - 70, Goals.y, FontSize, aBuf, -1);
 		str_format(aBuf, sizeof(aBuf), "%d/%d", GameClient()->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients);
-		TextRender()->Text(CenterX-70+TextWidth, Goals.y, FontSize, aBuf, -1);
-		TextRender()->TextColor(0.5f,1,0.5f,1);
+		TextRender()->Text(CenterX - 70 + TextWidth, Goals.y, FontSize, aBuf, -1);
+		TextRender()->TextColor(0.5f, 1, 0.5f, 1);
 		str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_Snap.m_NumPlayers);
-		TextRender()->Text(CenterX-70+TextWidth, Goals.y, FontSize, aBuf, -1);
-		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
+		TextRender()->Text(CenterX - 70 + TextWidth, Goals.y, FontSize, aBuf, -1);
+		TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1);
 
 		// render map
 		FontSizeResize = FontSize;
 		str_format(aBuf, sizeof(aBuf), "%s: ", Localize("Map"));
 		float TagTw = TextRender()->TextWidth(FontSize, aBuf, -1);
-		while(TextRender()->TextWidth(FontSizeResize, CurrentServerInfo.m_aMap, -1) > 200-TagTw && FontSizeResize > 16)
+		while(TextRender()->TextWidth(FontSizeResize, CurrentServerInfo.m_aMap, -1) > 200 - TagTw && FontSizeResize > 16)
 			--FontSizeResize;
 		TextWidth = TextRender()->TextWidth(FontSizeResize, CurrentServerInfo.m_aMap, -1);
-		if (TextWidth > 200.0f-TagTw) {
-			TextWidth = 200.0f-TagTw;
+		if(TextWidth > 200.0f - TagTw)
+		{
+			TextWidth = 200.0f - TagTw;
 		}
-		TextRender()->Text(RightX-TextWidth-TagTw, Goals.y, FontSize, aBuf, -1);
-		TextRender()->Text(RightX-TextWidth, Goals.y+(FontSize-FontSizeResize)/2, FontSizeResize, CurrentServerInfo.m_aMap, -1);
+		TextRender()->Text(RightX - TextWidth - TagTw, Goals.y, FontSize, aBuf, -1);
+		TextRender()->Text(RightX - TextWidth, Goals.y + (FontSize - FontSizeResize) / 2, FontSizeResize, CurrentServerInfo.m_aMap, -1);
 	}
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 }
@@ -1132,7 +1142,7 @@ float CScoreboard::RenderScoreboardEx(CUIRect Scoreboard, int Team, int CountSta
 	float Spacing;
 	float RoundRadius;
 	float FontSize;
-	
+
 	if(NumPlayers <= 16)
 	{
 		LineHeight = 40.0f;
@@ -1201,7 +1211,7 @@ float CScoreboard::RenderScoreboardEx(CUIRect Scoreboard, int Team, int CountSta
 	const float HeadlineY = Headline.y + Headline.h / 2.0f - HeadlineFontsize / 2.0f;
 	const char *pScore = TimeScore ? Localize("Time") : Localize("Score");
 
-	TextRender()->TextColor(0.8f,0.8f,0.8f,1.0f);
+	TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
 	TextRender()->Text(ScoreOffset + ScoreLength - TextRender()->TextWidth(HeadlineFontsize, pScore), HeadlineY, HeadlineFontsize, pScore);
 	TextRender()->Text(NameOffset, HeadlineY, HeadlineFontsize, Localize("Name"));
 	const char *pClanLabel = Localize("Clan");
@@ -1209,7 +1219,7 @@ float CScoreboard::RenderScoreboardEx(CUIRect Scoreboard, int Team, int CountSta
 	const char *pPingLabel = Localize("Ping");
 	TextRender()->Text(PingOffset + PingLength - TextRender()->TextWidth(HeadlineFontsize, pPingLabel), HeadlineY, HeadlineFontsize, pPingLabel);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	
+
 	// render player entries
 	int CountRendered = 0;
 	int PrevDDTeam = -1;

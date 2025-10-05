@@ -782,15 +782,14 @@ MACRO_CONFIG_INT(ClVideoRecorderFPS, cl_video_recorder_fps, 60, 1, 1000, CFGFLAG
  * Add config variables for mods below this comment to avoid merge conflicts.
  */
 
- // ddnet-vila
- 
- MACRO_CONFIG_INT(ClPredictInstantApply, cl_predict_instant_apply, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply input instantly to prediction")
- MACRO_CONFIG_INT(ClAnimIdle, cl_anim_idle, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God idle animations")
- MACRO_CONFIG_INT(ClAnimInair, cl_anim_inair, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God inair animations")
- MACRO_CONFIG_INT(ClAnimWalk, cl_anim_walk, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God walk animations")
- MACRO_CONFIG_INT(ClAnimSkid, cl_anim_skid, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God skid animations")
- MACRO_CONFIG_INT(ClAnimRun, cl_anim_run, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Hecta run animations")
- MACRO_CONFIG_INT(ClAnimRecoil, cl_anim_recoil, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use recoil animations")
- MACRO_CONFIG_INT(ClHudStatbars, cl_hud_statbars, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable spectator statbars")
- MACRO_CONFIG_INT(ClHudZHealthbar, cl_hud_z_healthbar, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable yet another placement of healthbar")
+// ddnet-vila
 
+MACRO_CONFIG_INT(ClPredictInstantApply, cl_predict_instant_apply, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply input instantly to prediction")
+MACRO_CONFIG_INT(ClAnimIdle, cl_anim_idle, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God idle animations")
+MACRO_CONFIG_INT(ClAnimInair, cl_anim_inair, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God inair animations")
+MACRO_CONFIG_INT(ClAnimWalk, cl_anim_walk, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God walk animations")
+MACRO_CONFIG_INT(ClAnimSkid, cl_anim_skid, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Psycho.God skid animations")
+MACRO_CONFIG_INT(ClAnimRun, cl_anim_run, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Hecta run animations")
+MACRO_CONFIG_INT(ClAnimRecoil, cl_anim_recoil, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use recoil animations")
+MACRO_CONFIG_INT(ClHudStatbars, cl_hud_statbars, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable spectator statbars")
+MACRO_CONFIG_INT(ClHudZHealthbar, cl_hud_z_healthbar, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable yet another placement of healthbar")
