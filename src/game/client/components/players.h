@@ -55,6 +55,15 @@ public:
 
 	const std::shared_ptr<CManagedTeeRenderInfo> &NinjaTeeRenderInfo() const { return m_pNinjaTeeRenderInfo; }
 	const std::shared_ptr<CManagedTeeRenderInfo> &SpectatorTeeRenderInfo() const { return m_pSpectatorTeeRenderInfo; }
+
+	// ddnet-vila
+private:
+	void RenderPlayerEx(
+		const CNetObj_Character *pPrevChar,
+		const CNetObj_Character *pPlayerChar,
+		const CTeeRenderInfo *pRenderInfo,
+		int ClientId,
+		float Intra = 0.f);
 };
 
 #endif
