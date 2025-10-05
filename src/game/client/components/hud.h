@@ -170,6 +170,10 @@ private:
 	int m_PracticeModeOffset;
 	int m_Team0ModeOffset;
 	int m_LockModeOffset;
+
+	// ddnet-vila
+
+	void RenderSpectatorHudEx();
 };
 
 #endif

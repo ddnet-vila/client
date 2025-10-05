@@ -46,6 +46,14 @@ public:
 	void OnMessage(int MsgType, void *pRawMsg) override;
 
 	bool IsActive() const;
+
+	// ddnet-vila
+private:
+	void OnRenderEx();
+	void RenderGoalsEx(CUIRect Goals, float LineHeight);
+	float RenderScoreboardEx(CUIRect Scoreboard, int Team, int CountStart, int CountEnd, CScoreboardRenderState &State);
+	void RenderTitleEx(CUIRect TitleBar, int Team, const char *pTitle, int NumPlayers);
+	float RenderMultiBoard(CUIRect Scoreboard, int Team, int NumPlayers, CScoreboardRenderState &RenderState);
 };
 
 #endif

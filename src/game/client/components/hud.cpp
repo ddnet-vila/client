@@ -1544,8 +1544,13 @@ void CHud::RenderMovementInformation()
 
 void CHud::RenderSpectatorHud()
 {
+	// ddnet-vila
+	RenderSpectatorHudEx();
+	return;
+	//
+
 	// draw the box
-	Graphics()->DrawRect(m_Width - 180.0f, m_Height - 15.0f, 180.0f, 15.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_TL, 5.0f);
+	Graphics()->DrawRect(m_Width - 180.0f, m_Height - 15.0f, 180.0f, 15.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_TL, 5.0f);
 
 	// draw the text
 	char aBuf[128];
@@ -1882,5 +1887,54 @@ void CHud::RenderRecord()
 		str_time_float(PlayerRecord, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
 		str_format(aBuf, sizeof(aBuf), "%s%s", PlayerRecord > 3600 ? "" : "   ", aTime);
 		TextRender()->Text(53, 82, 6, aBuf, -1.0f);
+	}
+}
+
+// ddnet-vila
+
+void CHud::RenderSpectatorHudEx()
+{
+	// draw the box
+	Graphics()->DrawRect(m_Width - 130.0f, m_Height - 15.0f, 130.0f, 15.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_TL, 5.0f);
+
+	// draw the text
+	char aBuf[128];
+	if(GameClient()->m_MultiViewActivated)
+	{
+		str_copy(aBuf, Localize("Multi-View"));
+	}
+	else if(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId != SPEC_FREEVIEW)
+	{
+		const auto &Player = GameClient()->m_aClients[GameClient()->m_Snap.m_SpecInfo.m_SpectatorId];
+		if(g_Config.m_ClShowIds)
+			str_format(aBuf, sizeof(aBuf), Localize("Following %d: %s", "Spectating"), Player.ClientId(), Player.m_aName);
+		else
+			str_format(aBuf, sizeof(aBuf), Localize("Following %s", "Spectating"), Player.m_aName);
+	}
+	else
+	{
+		str_copy(aBuf, Localize("Free-View"));
+	}
+	TextRender()->Text(m_Width - 124.0f, m_Height - 15.0f + (15.f - 8.f) / 2.f, 8.0f, aBuf, -1.0f);
+
+	// draw the camera info
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && GameClient()->m_Camera.SpectatingPlayer() && GameClient()->m_Camera.CanUseAutoSpecCamera() && g_Config.m_ClSpecAutoSync)
+	{
+		bool AutoSpecCameraEnabled = GameClient()->m_Camera.m_AutoSpecCamera;
+		const char *pLabelText = Localize("AUTO", "Spectating Camera Mode Icon");
+		const float TextWidth = TextRender()->TextWidth(6.0f, pLabelText);
+
+		constexpr float RightMargin = 4.0f;
+		constexpr float IconWidth = 6.0f;
+		constexpr float Padding = 3.0f;
+		const float TagWidth = IconWidth + TextWidth + Padding * 3.0f;
+		const float TagX = m_Width - RightMargin - TagWidth;
+		Graphics()->DrawRect(TagX, m_Height - 12.0f, TagWidth, 10.0f, ColorRGBA(1.0f, 1.0f, 1.0f, AutoSpecCameraEnabled ? 0.50f : 0.10f), IGraphics::CORNER_ALL, 2.5f);
+		TextRender()->TextColor(1, 1, 1, AutoSpecCameraEnabled ? 1.0f : 0.65f);
+		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+		TextRender()->Text(TagX + Padding, m_Height - 10.0f, 6.0f, FontIcons::FONT_ICON_CAMERA, -1.0f);
+		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		TextRender()->Text(TagX + Padding + IconWidth + Padding, m_Height - 10.0f, 6.0f, pLabelText, -1.0f);
+		TextRender()->TextColor(1, 1, 1, 1);
 	}
 }
